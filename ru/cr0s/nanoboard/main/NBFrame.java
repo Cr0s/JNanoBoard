@@ -25,6 +25,8 @@ package cr0s.nanoboard.main;
 
 import cr0s.nanoboard.rules.Rule;
 import cr0s.nanoboard.rules.RulesManager;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.table.DefaultTableModel;
@@ -281,9 +283,10 @@ public class NBFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
-        this.setTitle("NanoBoard version: " + MainClass.VERSION);
+        this.setTitle("JNanoBoard version: " + MainClass.VERSION);
         evt.getWindow().setLocationRelativeTo(evt.getOppositeWindow());
         
+        this.edBoardCode.setText(MainClass.config.getProperty("boardKey", ""));
         addRulesInTable();
     }//GEN-LAST:event_formWindowOpened
 
@@ -361,6 +364,13 @@ public class NBFrame extends javax.swing.JFrame {
 
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
         RulesManager.getInstance().saveRules(MainClass.RULES_DIR);
+        MainClass.config.setProperty("boardKey", this.edBoardCode.getText());
+        
+        try {
+            MainClass.config.store(new FileOutputStream(MainClass.CONFIG_FILE), "JNanoBoard config file");
+        } catch (IOException ex) {
+            Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_formWindowClosed
 
     /**

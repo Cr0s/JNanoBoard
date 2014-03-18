@@ -24,24 +24,37 @@
 package cr0s.nanoboard.main;
 
 import cr0s.nanoboard.rules.RulesManager;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author user
+ * Main application class
+ * @author Cr0s
  */
 public class MainClass {
-    public static final String VERSION = "0.1a";
+    public static final String VERSION = "0.2a";
     public static final String RULES_DIR = System.getProperty("user.dir") + System.getProperty("file.separator") + "rules";
+    public static final String CONFIG_FILE = System.getProperty("user.dir") + System.getProperty("file.separator") + "JNanoBoard.properties";
     
     public static NBFrame mainFrame;
+    
+    public static Properties config;
     public static void main(String[] args) {
         try {
-            System.out.println("[ NanoBoard version: " + VERSION + "]");
+            System.out.println("[ JNanoBoard version: " + VERSION + "]");
 
             RulesManager.getInstance().loadRules(RULES_DIR);      
 
+            config = new Properties();
+            try {
+              config.load(new FileInputStream(CONFIG_FILE));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }            
+            
             mainFrame = new NBFrame();
             mainFrame.setVisible(true);
         } catch (Exception ex) {
