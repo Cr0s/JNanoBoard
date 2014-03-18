@@ -1,21 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
-    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/1">
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/rules/Rule.java</file>
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/rules/RulesManager.java</file>
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/rules/parser/RuleDrivenTextParser.java</file>
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/image/ImageEncoder.java</file>
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/image/ImageWriteException.java</file>
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/main/MainClass.java</file>
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/main/NBFrame.java</file>
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/main/RuleDialog.java</file>
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/stegano/EncryptionProvider.java</file>
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/stegano/SteganoDecoder.java</file>
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/stegano/SteganoEncoder.java</file>
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/util/ByteUtils.java</file>
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/http/HttpDownloader.java</file>
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/main/workers/WorkerTestRule.java</file>
-        <file>file:/C:/Users/user/Desktop/NanoBoard/NanoBoard/ru/cr0s/nanoboard/main/workers/PairIntString.java</file>
-    </open-files>
 </project-private>
