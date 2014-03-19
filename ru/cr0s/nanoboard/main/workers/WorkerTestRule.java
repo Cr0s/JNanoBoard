@@ -37,7 +37,7 @@ import javax.swing.SwingWorker;
  * Rule testing worker
  * @author Cr0s
  */
-public class WorkerTestRule extends SwingWorker<Void, PairIntString> {
+public class WorkerTestRule extends SwingWorker<Void, TestTaskState> {
 
     private RuleDialog rd;
     private Rule rule;
@@ -49,45 +49,45 @@ public class WorkerTestRule extends SwingWorker<Void, PairIntString> {
     
     @Override
     protected Void doInBackground() {
-        publish(new PairIntString(0, "[*] Checking " + rule.toString()));
+        publish(new TestTaskState(0, "[*] Checking " + rule.toString()));
         
         String htmlPage = "";
         
         try {
             htmlPage = HttpDownloader.getString(rule.getRuleURL());
         } catch(MalformedURLException ex) { 
-            publish(new PairIntString(0, "[!] Invalid rule URL: " + ex.getMessage()));
+            publish(new TestTaskState(0, "[!] Invalid rule URL: " + ex.getMessage()));
             //this.cancel(true);
             return null;
         } catch (IOException ex) {
-            publish(new PairIntString(0, "[!] Can't get HTML content by rule: " + ex.getMessage()));
+            publish(new TestTaskState(0, "[!] Can't get HTML content by rule: " + ex.getMessage()));
             //this.cancel(true);
             return null;            
         }
         
-        publish(new PairIntString(1, "[*] Got page content, checking by rule's regexpr... (" + rule.getRuleRegExpr() + ")"));
+        publish(new TestTaskState(1, "[*] Got page content, checking by rule's regexpr... (" + rule.getRuleRegExpr() + ")"));
         
         RuleDrivenTextParser rdtp = new RuleDrivenTextParser(rule);
         
         ArrayList<String> resultList = rdtp.parseTextByRule(htmlPage);
         if (resultList.size() > 0) {
-            publish(new PairIntString(2, "[*] Found some matches, you can see it in matches tab"));
+            publish(new TestTaskState(2, "[*] Found some matches, you can see it in matches tab"));
             
             for (String s : resultList) {
-                publish(new PairIntString(-1, s));
+                publish(new TestTaskState(-1, s));
             }
         } else {
-            publish(new PairIntString(0, "[!] There is no results matched with rule's regexpr!"));
+            publish(new TestTaskState(0, "[!] There is no results matched with rule's regexpr!"));
         }
         
         
-        publish(new PairIntString(3, "[*] Testing finished!"));
+        publish(new TestTaskState(3, "[*] Testing finished!"));
         return null;
     }
     
     @Override
-    protected void process(List<PairIntString> chunks) {
-        for (PairIntString chunk : chunks) {
+    protected void process(List<TestTaskState> chunks) {
+        for (TestTaskState chunk : chunks) {
             int progressValue = chunk.i;
             String stringToLog = chunk.s;
             
