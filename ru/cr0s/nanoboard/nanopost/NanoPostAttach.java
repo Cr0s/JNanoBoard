@@ -23,7 +23,10 @@
  */
 package cr0s.nanoboard.nanopost;
 
+import cr0s.nanoboard.util.ByteUtils;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.IOException;
 
 /**
  * A NanoPost attach container object
@@ -33,14 +36,13 @@ public class NanoPostAttach {
     private byte[] attachData;
     private String fileName;
     
-    private NanoPost post;
+    public NanoPost post;
     
     private File localFile;
     
-    public NanoPostAttach(NanoPost post, byte[] attachData, String fileName, File localFile) {
+    public NanoPostAttach(byte[] attachData, String fileName, File localFile) {
         this.attachData = attachData;
         this.fileName = fileName;
-        this.post = post;
         this.localFile = localFile;
     }
 
@@ -70,5 +72,12 @@ public class NanoPostAttach {
      */
     public File getLocalFile() {
         return localFile;
+    }
+
+    void writeToStream(DataOutputStream dos) throws IOException {
+        dos.writeUTF(fileName);
+        dos.writeInt((int)localFile.length());
+        
+        dos.write(ByteUtils.readBytesFromFile(localFile));
     }
 }

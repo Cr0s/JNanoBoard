@@ -23,15 +23,91 @@
  */
 package cr0s.nanoboard.image;
 
+import cr0s.nanoboard.stegano.EncryptionProvider;
+import cr0s.nanoboard.util.ByteUtils;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.imageio.ImageIO;
 
 /**
  * Image encoding and stegano routines
+ *
  * @author Cr0s
  */
 public class ImageUtils {
-    public static byte[] tryToDecodeSteganoImage(ByteArrayOutputStream baos, String key) {
+
+    public static byte[] tryToDecodeSteganoImage(byte[] bytes, String key) {
+        try {
+            // 1. Try to load as image
+            BufferedImage img = ImageIO.read(new ByteArrayInputStream(bytes));
+
+            // 2. Try to read stegano data
+            short[] s = ImageEncoder.readBytesFromImage(img, new Random(key.hashCode()));
+            
+            // Data inside image is too small, reject image
+            if (s.length < EncryptionProvider.HASH_SIZE_BYTES * 2) {
+                return null;
+            }
+            
+            byte[] b = new byte[s.length];
+            for (int i = 0; i < b.length; i++) {
+                b[i] = (byte) (s[i] & 0xFF);
+            }
+
+            byte[] decryptedBytes = null;
+            try {
+                decryptedBytes = EncryptionProvider.decryptBytes(b, key.getBytes());
+            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException ex) {
+                return null;
+            }
+            
+            return decryptedBytes;
+        } catch (IOException ex) {
+            Logger.getLogger(ImageUtils.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
         return null;
     }
+    
+    public static byte[] tryToDecodeSteganoImage(ByteArrayOutputStream baos, String key) {
+        return tryToDecodeSteganoImage(baos.toByteArray(), key);
+    }
+    
+    public static void encodeIntoImage(File containerImg, byte[] srcBytes, String key) {
+        try {
+            BufferedImage in = ImageIO.read(containerImg);
+            BufferedImage newImage = new BufferedImage(in.getWidth(), in.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = newImage.createGraphics();
+            g.drawImage(in, 0, 0, null);
+            g.dispose();
+
+            byte[] encryptedBytes = EncryptionProvider.encryptBytes(srcBytes, key.getBytes());
+
+            // Trick: convert from unsigned number to signed byte
+            short[] srcS = new short[encryptedBytes.length];
+            for (int i = 0; i < encryptedBytes.length; i++) {
+                srcS[i] = (short) (encryptedBytes[i] & 0xFF);
+            }
+            
+            String output = containerImg.getAbsolutePath() + ".nanopost.png";
+            ImageEncoder.writeBytesToImage(in, srcS, output, new Random(key.hashCode()));
+
+            System.out.println("[OK] Steganographic .png \"" + output + "\" generated.");
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | ImageWriteException | IOException ex) {
+            Logger.getLogger(ImageUtils.class.getName()).log(Level.SEVERE, null, ex);
+        }    
+    }        
 }

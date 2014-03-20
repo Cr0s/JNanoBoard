@@ -23,20 +23,30 @@
  */
 package cr0s.nanoboard.main;
 
+import cr0s.nanoboard.image.ImageUtils;
 import cr0s.nanoboard.main.workers.WorkerExecuteRule;
 import cr0s.nanoboard.main.workers.WorkerSyncImage;
+import cr0s.nanoboard.nanopost.MalformedNanoPostException;
+import cr0s.nanoboard.nanopost.NanoPost;
+import cr0s.nanoboard.nanopost.NanoPostFactory;
 import cr0s.nanoboard.rules.Rule;
 import cr0s.nanoboard.rules.RulesManager;
+import cr0s.nanoboard.stegano.EncryptionProvider;
+import cr0s.nanoboard.util.ByteUtils;
 import java.awt.Component;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.filechooser.*;
 
 /**
  * Main program window
@@ -64,6 +74,8 @@ public class NBFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        fcAttach = new javax.swing.JFileChooser();
+        fcContainer = new javax.swing.JFileChooser();
         tabs = new javax.swing.JTabbedPane();
         panelRefresh = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
@@ -83,6 +95,19 @@ public class NBFrame extends javax.swing.JFrame {
         jPanel6 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tableSync = new javax.swing.JTable();
+        jPanel1 = new javax.swing.JPanel();
+        panPostText = new javax.swing.JPanel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        txtPostText = new javax.swing.JTextArea();
+        jPanel5 = new javax.swing.JPanel();
+        jLabel4 = new javax.swing.JLabel();
+        edAttachFile = new javax.swing.JTextField();
+        btnSelectFile = new javax.swing.JButton();
+        jPanel7 = new javax.swing.JPanel();
+        jLabel5 = new javax.swing.JLabel();
+        edContainerFile = new javax.swing.JTextField();
+        btnSelectContainerFile = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -202,7 +227,7 @@ public class NBFrame extends javax.swing.JFrame {
                                 .addComponent(btnDeleteRule)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(btnEditRule)))
-                        .addGap(0, 25, Short.MAX_VALUE)))
+                        .addGap(0, 100, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -325,7 +350,7 @@ public class NBFrame extends javax.swing.JFrame {
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 719, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 794, Short.MAX_VALUE)
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -350,6 +375,147 @@ public class NBFrame extends javax.swing.JFrame {
 
         tabs.addTab("NanoPosts sync", panelSynch);
 
+        panPostText.setBorder(javax.swing.BorderFactory.createTitledBorder("Post text"));
+
+        jScrollPane3.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+
+        txtPostText.setColumns(20);
+        txtPostText.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        txtPostText.setRows(5);
+        jScrollPane3.setViewportView(txtPostText);
+
+        javax.swing.GroupLayout panPostTextLayout = new javax.swing.GroupLayout(panPostText);
+        panPostText.setLayout(panPostTextLayout);
+        panPostTextLayout.setHorizontalGroup(
+            panPostTextLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane3)
+        );
+        panPostTextLayout.setVerticalGroup(
+            panPostTextLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 417, Short.MAX_VALUE)
+        );
+
+        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Post attach"));
+
+        jLabel4.setText("File name:");
+
+        edAttachFile.setEditable(false);
+        edAttachFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                edAttachFileActionPerformed(evt);
+            }
+        });
+
+        btnSelectFile.setText("Open...");
+        btnSelectFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSelectFileActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addComponent(jLabel4)
+                .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addComponent(edAttachFile, javax.swing.GroupLayout.DEFAULT_SIZE, 317, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(btnSelectFile, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addComponent(jLabel4)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(edAttachFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnSelectFile)))
+        );
+
+        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder("NanoPost container PNG"));
+
+        jLabel5.setText("File name:");
+
+        edContainerFile.setEditable(false);
+        edContainerFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                edContainerFileActionPerformed(evt);
+            }
+        });
+
+        btnSelectContainerFile.setText("Open...");
+        btnSelectContainerFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSelectContainerFileActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
+        jPanel7.setLayout(jPanel7Layout);
+        jPanel7Layout.setHorizontalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addComponent(jLabel5)
+                .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addComponent(edContainerFile)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(btnSelectContainerFile, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+        jPanel7Layout.setVerticalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addComponent(jLabel5)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(edContainerFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnSelectContainerFile)))
+        );
+
+        jButton1.setText("CREATE");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(panPostText, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap())
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap(274, Short.MAX_VALUE)
+                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 302, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(250, 250, 250))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(panPostText, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel7, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+
+        tabs.addTab("Create NanoPost", jPanel1);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -370,6 +536,8 @@ public class NBFrame extends javax.swing.JFrame {
         
         this.edBoardCode.setText(MainClass.config.getProperty("boardKey", ""));
         addRulesInTable();
+        
+        fcContainer.addChoosableFileFilter(new FileNameExtensionFilter("PNG files", "png"));
     }//GEN-LAST:event_formWindowOpened
 
     private void btnAddRuleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddRuleActionPerformed
@@ -381,10 +549,19 @@ public class NBFrame extends javax.swing.JFrame {
 
     private void btnStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStartActionPerformed
         tabs.setSelectedIndex(1);
+
+        DefaultTableModel model = (DefaultTableModel) tableSync.getModel();
+        int rows = model.getRowCount(); 
+        for(int i = rows - 1; i >= 0; i--)
+        {
+           model.removeRow(i); 
+        }        
         
         for (Rule r : RulesManager.getInstance().getRulesList()) {
-            WorkerExecuteRule wer = new WorkerExecuteRule(this, r);
-            wer.execute();
+            if (r.isIsEnabled()) {
+                WorkerExecuteRule wer = new WorkerExecuteRule(this, r);
+                wer.execute();
+            }
         }        
     }//GEN-LAST:event_btnStartActionPerformed
 
@@ -427,7 +604,7 @@ public class NBFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_btnEditRuleActionPerformed
 
     private void tableRulesInputMethodTextChanged(java.awt.event.InputMethodEvent evt) {//GEN-FIRST:event_tableRulesInputMethodTextChanged
-        Rule rule = RulesManager.getInstance().getRuleByName((String)tableRules.getModel().getValueAt(tableRules.getSelectedRow(), 1));
+        /*Rule rule = RulesManager.getInstance().getRuleByName((String)tableRules.getModel().getValueAt(tableRules.getSelectedRow(), 1));
         
         if (rule == null) {
             return;
@@ -446,7 +623,7 @@ public class NBFrame extends javax.swing.JFrame {
                 rule.setRuleRegExpr(evt.paramString());
         }
         
-        RulesManager.getInstance().saveRules(MainClass.RULES_DIR);
+        RulesManager.getInstance().saveRules(MainClass.RULES_DIR);*/
     }//GEN-LAST:event_tableRulesInputMethodTextChanged
 
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
@@ -459,6 +636,66 @@ public class NBFrame extends javax.swing.JFrame {
             Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_formWindowClosed
+
+    private void edAttachFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_edAttachFileActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_edAttachFileActionPerformed
+
+    private void edContainerFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_edContainerFileActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_edContainerFileActionPerformed
+
+    private void btnSelectFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelectFileActionPerformed
+        if (fcAttach.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            edAttachFile.setText(fcAttach.getSelectedFile().toString());
+        }
+    }//GEN-LAST:event_btnSelectFileActionPerformed
+
+    private void btnSelectContainerFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelectContainerFileActionPerformed
+        fcContainer.setAcceptAllFileFilterUsed(false);
+        
+        if (fcContainer.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            edContainerFile.setText(fcContainer.getSelectedFile().toString());
+        }        
+    }//GEN-LAST:event_btnSelectContainerFileActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        NanoPost np;
+        
+        if (!edAttachFile.getText().isEmpty()) {
+            File attachFile = new File(edAttachFile.getText());
+            if (!attachFile.exists()) {
+                JOptionPane.showMessageDialog(this, "Selected attach file does not exist", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            np = NanoPostFactory.createNanoPost(txtPostText.getText(), EncryptionProvider.EMPTY_HASH, attachFile);
+        } else {
+            np = NanoPostFactory.createNanoPost(txtPostText.getText(), EncryptionProvider.EMPTY_HASH, null);
+        }
+        
+        File containerFile = new File(edContainerFile.getText());
+        if (!containerFile.exists()) {
+            JOptionPane.showMessageDialog(this, "Selected container file does not exists.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        ImageUtils.encodeIntoImage(containerFile, np.getAsBytes(), edBoardCode.getText());
+        
+        try {
+            byte[] dataBytes = ImageUtils.tryToDecodeSteganoImage(ByteUtils.readBytesFromFile(new File(containerFile.toString() + ".nanopost.png")), edBoardCode.getText());
+            try {
+                NanoPost nanoPost = NanoPostFactory.getNanoPostFromBytes(dataBytes);
+                nanoPost.setSourceImageData(ByteUtils.readBytesFromFile(new File(containerFile.toString() + ".nanopost.png")));
+                nanoPost.saveToFile();
+            } catch (MalformedNanoPostException ex) {
+                Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }//GEN-LAST:event_jButton1ActionPerformed
     
     public void addRulesInTable() {
         try {
@@ -509,21 +746,36 @@ public class NBFrame extends javax.swing.JFrame {
     private javax.swing.JButton btnAddRule;
     private javax.swing.JButton btnDeleteRule;
     private javax.swing.JButton btnEditRule;
+    private javax.swing.JButton btnSelectContainerFile;
+    private javax.swing.JButton btnSelectFile;
     private javax.swing.JButton btnStart;
+    private javax.swing.JTextField edAttachFile;
     private javax.swing.JTextField edBoardCode;
+    private javax.swing.JTextField edContainerFile;
+    private javax.swing.JFileChooser fcAttach;
+    private javax.swing.JFileChooser fcContainer;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JPanel panPostText;
     private javax.swing.JPanel panelRefresh;
     private javax.swing.JPanel panelSynch;
     private javax.swing.JTable tableRules;
     private javax.swing.JTable tableSync;
     private javax.swing.JTabbedPane tabs;
+    private javax.swing.JTextArea txtPostText;
     // End of variables declaration//GEN-END:variables
 }

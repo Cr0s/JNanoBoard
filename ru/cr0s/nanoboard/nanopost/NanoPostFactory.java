@@ -24,43 +24,135 @@
 package cr0s.nanoboard.nanopost;
 
 import cr0s.nanoboard.stegano.EncryptionProvider;
+import cr0s.nanoboard.util.ByteUtils;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A NanoPost factory, checks creates NanoPosts from byte arrays
- * 
- * NanoPost data structure:
- * [Post hash (64 bytes) | Parent hash or zeros (64 bytes) | Post data bytes] 
- * 
+ *
+ * NanoPost data structure: [Post hash (64 bytes) | Parent hash or zeros (64
+ * bytes) | Post data bytes]
+ *
  * @author Cr0s
  */
 public class NanoPostFactory {
-    public static NanoPost getNanoPost(byte[] data) throws MalformedNanoPostException {
-        // 1. Determine data size
-        int dataLength = data.length;
-        
-        if (dataLength < EncryptionProvider.HASH_SIZE_BYTES * 2) {
-            throw new MalformedNanoPostException("Post data is too small");
+
+    public static NanoPost getNanoPostFromBytes(byte[] data) throws MalformedNanoPostException {
+        try {
+            // 1. Determine data size
+            int dataLength = data.length;
+            DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));
+
+            if (dataLength < EncryptionProvider.HASH_SIZE_BYTES * 2) {
+                throw new MalformedNanoPostException("Post data is too small");
+            }
+
+            // 2. Get post hash
+            byte[] postHash = new byte[EncryptionProvider.HASH_SIZE_BYTES]; // SHA-512
+            dis.readFully(postHash);
+
+            // 3. Get hash of data and compare
+            byte[] dataHashToCheck; // SHA-512
+
+            // Whole nanopost data to check (including parent hash)
+            byte[] npData = new byte[dataLength - EncryptionProvider.HASH_SIZE_BYTES];
+            dis.readFully(npData);//, EncryptionProvider.HASH_SIZE_BYTES, 2 * EncryptionProvider.HASH_SIZE_BYTES);
+
+            dataHashToCheck = EncryptionProvider.sha512(npData);
+            
+            boolean result = Arrays.equals(postHash, dataHashToCheck);
+            if (!result) {
+                System.err.println("[H] Hash from header: " + ByteUtils.bytesToHexString(postHash));
+                System.err.println("[H] Real hash       : " + ByteUtils.bytesToHexString(dataHashToCheck));
+
+                throw new MalformedNanoPostException("Post hash and real hash of data is not equals. Is post data corrupted?");
+            }
+
+            dis = new DataInputStream(new ByteArrayInputStream(npData));
+
+            // 4. Get parent hash
+            byte[] parentHash = new byte[EncryptionProvider.HASH_SIZE_BYTES];
+            dis.readFully(parentHash, 0, EncryptionProvider.HASH_SIZE_BYTES);
+
+            System.out.println("[H] Post hash   : " + ByteUtils.bytesToHexString(postHash));
+            System.out.println("[H] Parent hash : " + ByteUtils.bytesToHexString(parentHash));
+
+            // 5. Read post data
+            byte[] postData = new byte[dataLength - (2 * EncryptionProvider.HASH_SIZE_BYTES)];
+            dis.readFully(postData);//, (2 * EncryptionProvider.HASH_SIZE_BYTES), dataLength);
+            dis = new DataInputStream(new ByteArrayInputStream(postData));
+
+            // 6. Read post text
+            String postText = dis.readUTF();
+
+            System.out.println("[H] Post text : " + postText);
+            
+            // 7. Read post attach data
+            String attachFileName = dis.readUTF();
+            System.out.println("[H] Attach filename : " + attachFileName); 
+            
+            NanoPostAttach att = null;
+            
+            if (!attachFileName.isEmpty()) {
+                int attachSize = dis.readInt();
+                if (attachSize <= 0) {
+                    throw new MalformedNanoPostException("Attach size is less or equals ZERO.");
+                }
+                
+                byte[] attachData = new byte[attachSize];
+                dis.read(attachData);
+                
+                att = new NanoPostAttach(attachData, attachFileName, null);
+            }
+
+            int postTimestamp = dis.readInt();
+            if (postTimestamp < 0) {
+                throw new MalformedNanoPostException("Invalid post timestamp!");
+            }
+            
+            NanoPost np = new NanoPost(postHash, parentHash, postText, postTimestamp, att);
+
+            return np;
+        } catch (IOException ex) {
+            Logger.getLogger(NanoPostFactory.class.getName()).log(Level.SEVERE, null, ex);
+            throw new MalformedNanoPostException("IO Error!");
         }
+    }
+
+    public static NanoPost createNanoPost(String postText, byte[] parentHash, File postAttach) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
         
-        // 2. Get post hash
-        byte[] postHash; // SHA-512
-        postHash = Arrays.copyOfRange(data, 0, EncryptionProvider.HASH_SIZE_BYTES);
-        assert postHash.length == EncryptionProvider.HASH_SIZE_BYTES;
-        
-        // 3. Get hash of data and compare
-        byte[] dataHashToCheck; // SHA-512
-        dataHashToCheck = EncryptionProvider.sha512(Arrays.copyOfRange(data, EncryptionProvider.HASH_SIZE_BYTES + 1, dataLength));
-        assert dataHashToCheck.length == EncryptionProvider.HASH_SIZE_BYTES;
-        
-        boolean result = Arrays.equals(postHash, dataHashToCheck);
-        if (!result) {
-            throw new MalformedNanoPostException("Post hash and real hash of data is not equals. Is post data corrupted?");
+        NanoPostAttach att = null;
+        try {
+            dos.write(parentHash);
+            dos.writeUTF(postText);
+            
+            if (postAttach == null) {
+                dos.writeUTF(""); // there is no attached file
+            } else {
+                att = new NanoPostAttach(ByteUtils.readBytesFromFile(postAttach), postAttach.getName(), postAttach);
+                att.writeToStream(dos);
+            }
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(NanoPostFactory.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(NanoPostFactory.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        // 4. Get parent hash
-        byte[] parentHash = Arrays.copyOfRange(data, EncryptionProvider.HASH_SIZE_BYTES + 1, 2 * EncryptionProvider.HASH_SIZE_BYTES);
-        assert parentHash.length == EncryptionProvider.HASH_SIZE_BYTES;
-        return null;
+
+        byte[] postHash = EncryptionProvider.sha512(baos.toByteArray());
+
+        // TODO: attach work
+        return new NanoPost(postHash, parentHash, postText, (int)(System.currentTimeMillis() / 1000), att);
     }
 }

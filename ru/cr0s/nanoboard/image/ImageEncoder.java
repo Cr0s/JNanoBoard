@@ -152,7 +152,7 @@ public class ImageEncoder {
             }
 
             try {
-                File outputfile = new File(System.getProperty("user.dir") + System.getProperty("file.separator") + filename);
+                File outputfile = new File(filename);
                 ImageIO.write(bimg, "png", outputfile);
             } catch (IOException e) { 
                 throw new ImageWriteException("Error writing to file: " + e.getMessage());

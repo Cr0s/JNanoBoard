@@ -25,13 +25,16 @@ package cr0s.nanoboard.main.workers;
 
 import cr0s.nanoboard.image.ImageUtils;
 import cr0s.nanoboard.main.NBFrame;
+import cr0s.nanoboard.nanopost.MalformedNanoPostException;
+import cr0s.nanoboard.nanopost.NanoPost;
+import cr0s.nanoboard.nanopost.NanoPostFactory;
 import cr0s.nanoboard.rules.Rule;
+import cr0s.nanoboard.util.ByteUtils;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
@@ -63,6 +66,8 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
 
     @Override
     protected Void doInBackground() {
+        final int BUFFER_SIZE = 1024;
+        
         // 1. Download image
         BufferedInputStream bis = null;
         ByteArrayOutputStream baos = null;
@@ -74,21 +79,36 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
             int totalDataRead = 0;
             bis = new BufferedInputStream(connection.getInputStream());
             baos = new ByteArrayOutputStream();
-            try (BufferedOutputStream bos = new BufferedOutputStream(baos, 1024)) {
-                byte[] data = new byte[1024];
+            try (BufferedOutputStream bos = new BufferedOutputStream(baos, BUFFER_SIZE)) {
+                byte[] data = new byte[BUFFER_SIZE];
                 int i = 0;
                 
-                while ((i = bis.read(data, 0, 1024)) >= 0) {
+                while ((i = bis.read(data)) != -1) {
                     totalDataRead = totalDataRead + i;
-                    bos.write(data, 0, i);
+                    baos.write(data, 0, i);
                     
                     publish(new SyncTaskState(rule, imageUrl, "Downloading", totalDataRead));
                 }
                 
                 publish(new SyncTaskState(rule, imageUrl, "Processing", this.totalProgressValue));
-                byte[] imageBytes = ImageUtils.tryToDecodeSteganoImage(baos, boardCode);
-                if (imageBytes != null) {
-                    // TODO work with nanopost factory
+                
+                byte[] imageBytes = baos.toByteArray();
+                byte[] imageSteganoBytes = ImageUtils.tryToDecodeSteganoImage(imageBytes, boardCode);
+                
+                if (imageSteganoBytes != null) {
+                    try {
+                        NanoPost np = NanoPostFactory.getNanoPostFromBytes(imageSteganoBytes);
+
+                        if (!np.isAlreadyDownloaded()) {
+                            publish(new SyncTaskState(rule, imageUrl, "NEW NANOPOST", this.totalProgressValue));
+                            np.setSourceImageData(imageBytes);
+                            np.saveToFile();
+                        } else {
+                            publish(new SyncTaskState(rule, imageUrl, "SKIPPED", this.totalProgressValue));
+                        }
+                    } catch (IOException | MalformedNanoPostException ex) {
+                        publish(new SyncTaskState(rule, imageUrl, "Not an NanoPost", this.totalProgressValue));
+                    }
                 } else {
                     publish(new SyncTaskState(rule, imageUrl, "Not an NanoPost", this.totalProgressValue));    
                 }

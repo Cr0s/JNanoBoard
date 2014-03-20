@@ -94,4 +94,19 @@ public class ByteUtils {
             }
         }
     }
+    
+    /**
+     * Transforms byte array into hexadecimal string
+     * @param digest input byte array
+     * @return a hex string
+     */
+    public static String bytesToHexString(byte[] digest) {
+        StringBuilder hexString = new StringBuilder();
+
+        for (int i = 0; i < digest.length; i++) {
+            hexString.append(Integer.toString((digest[i] & 0xff) + 0x100, 16).substring(1));
+        }
+
+        return hexString.toString();
+    }    
 }

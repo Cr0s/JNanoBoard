@@ -21,43 +21,12 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
  */
-package cr0s.nanoboard.rules.parser;
-
-import cr0s.nanoboard.rules.Rule;
-import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+package cr0s.nanoboard.nanopost.tree;
 
 /**
- * Parse any kind of test (HTML code, as example) by specified rule
- * @author user
+ * Tree of NanoPosts
+ * @author Cr0s
  */
-public class RuleDrivenTextParser {
-    private Rule rule;
+public class NanoPostTree {
     
-    private Pattern rulePattern;
-    
-    public RuleDrivenTextParser(Rule rule) {
-        this.rule = rule;
-        
-        rulePattern = Pattern.compile(this.rule.getRuleRegExpr());
-    }
-    
-    public ArrayList<String> parseTextByRule(String inputText) {
-        ArrayList<String> resultList = new ArrayList<>();
-        
-        Matcher ruleMatcher = rulePattern.matcher(inputText);
-        
-        while (ruleMatcher.find()) {
-            resultList.add(ruleMatcher.group(1));
-            ruleMatcher.find();
-        }
-        
-        return resultList; 
-    }
-    
-    @Override
-    public String toString() {
-        return String.format("Rule [%s, %s]", this.rule.getRuleName(), this.rule.getRuleRegExpr());
-    }
 }
