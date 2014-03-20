@@ -23,11 +23,14 @@
  */
 package cr0s.nanoboard.main;
 
+import cr0s.nanoboard.main.workers.WorkerExecuteRule;
+import cr0s.nanoboard.main.workers.WorkerSyncImage;
 import cr0s.nanoboard.rules.Rule;
 import cr0s.nanoboard.rules.RulesManager;
 import java.awt.Component;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JProgressBar;
@@ -41,6 +44,8 @@ import javax.swing.table.TableCellRenderer;
  */
 public class NBFrame extends javax.swing.JFrame {
 
+    public ArrayList<WorkerSyncImage> syncWorkers;
+    
     /**
      * Creates new form NBFrame
      */
@@ -376,6 +381,11 @@ public class NBFrame extends javax.swing.JFrame {
 
     private void btnStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStartActionPerformed
         tabs.setSelectedIndex(1);
+        
+        for (Rule r : RulesManager.getInstance().getRulesList()) {
+            WorkerExecuteRule wer = new WorkerExecuteRule(this, r);
+            wer.execute();
+        }        
     }//GEN-LAST:event_btnStartActionPerformed
 
     private void btnAddRuleMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnAddRuleMouseClicked
@@ -469,6 +479,26 @@ public class NBFrame extends javax.swing.JFrame {
             System.out.println(r.getRuleName());
             model.addRow(new Object[] { (Boolean)r.isIsEnabled(), (String)r.getRuleName(), (String)r.getRuleURL(), (String)r.getRuleRegExpr() });
         }
+    }
+    
+    public void setSyncTableRow(int rowIndex, String status, int progressValue, int maxProgressValue) {
+        tableSync.getModel().setValueAt(status, rowIndex, 2);
+        
+        Component c = (Component) tableSync.getValueAt(rowIndex, 3);
+
+        if (c instanceof JProgressBar) {
+            ((JProgressBar) c).setMaximum(maxProgressValue);
+            ((JProgressBar) c).setValue(progressValue);
+        }
+        
+        tableSync.repaint();
+    }
+    
+    public synchronized void createWorkerByRuleMatch(Rule rule, String imageUrl) {
+        ((DefaultTableModel) tableSync.getModel()).addRow(new Object[] { rule.getRuleName(), imageUrl, "-", new JProgressBar() });
+        WorkerSyncImage wsi = new WorkerSyncImage(this, edBoardCode.getText(), rule, imageUrl, tableSync.getModel().getRowCount() - 1);
+        //syncWorkers.add(wsi);
+        wsi.execute();
     }
     
     public RuleDialog ruleDialog;

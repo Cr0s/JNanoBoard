@@ -115,6 +115,7 @@ public class EncryptionProvider {
         return null;
     }
     
+    public static int HASH_SIZE_BYTES = 64;
     /**
      * Returns sha512 hash of bytes array
      * @param bytes input bytes

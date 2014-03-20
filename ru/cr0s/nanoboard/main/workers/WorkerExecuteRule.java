@@ -24,64 +24,60 @@
 package cr0s.nanoboard.main.workers;
 
 import cr0s.nanoboard.http.HttpDownloader;
+import cr0s.nanoboard.main.NBFrame;
 import cr0s.nanoboard.main.RuleDialog;
 import cr0s.nanoboard.rules.Rule;
 import cr0s.nanoboard.rules.parser.RuleDrivenTextParser;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.SwingWorker;
 
 /**
  * Rule testing worker
  * @author Cr0s
  */
-public class WorkerTestRule extends SwingWorker<Void, RuleTaskState> {
+public class WorkerExecuteRule extends SwingWorker<Void, RuleTaskState> {
 
-    private RuleDialog rd;
+    private NBFrame nbf;
     private Rule rule;
     
-    public WorkerTestRule(RuleDialog rd, Rule rule) {
-        this.rd = rd;
+    public WorkerExecuteRule(NBFrame nbf, Rule rule) {
+        this.nbf = nbf;
         this.rule = rule;
     }
     
     @Override
     protected Void doInBackground() {
-        publish(new RuleTaskState(0, "[*] Checking " + rule.toString()));
-        
         String htmlPage = "";
         
         try {
             htmlPage = HttpDownloader.getString(rule.getRuleURL());
         } catch(MalformedURLException ex) { 
-            publish(new RuleTaskState(0, "[!] Invalid rule URL: " + ex.getMessage()));
             //this.cancel(true);
             return null;
         } catch (IOException ex) {
-            publish(new RuleTaskState(0, "[!] Can't get HTML content by rule: " + ex.getMessage()));
             //this.cancel(true);
             return null;            
         }
-        
-        publish(new RuleTaskState(1, "[*] Got page content, checking by rule's regexpr... (" + rule.getRuleRegExpr() + ")"));
         
         RuleDrivenTextParser rdtp = new RuleDrivenTextParser(rule);
         
         ArrayList<String> resultList = rdtp.parseTextByRule(htmlPage);
         if (resultList.size() > 0) {
-            publish(new RuleTaskState(2, "[*] Found some matches, you can see it in matches tab"));
-            
             for (String s : resultList) {
-                publish(new RuleTaskState(-1, s));
+                try {
+                    publish(new RuleTaskState(-1, "http://" + (new URL(rule.getRuleURL())).getHost() + s));
+                } catch (MalformedURLException ex) {
+                    Logger.getLogger(WorkerExecuteRule.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
-        } else {
-            publish(new RuleTaskState(0, "[!] There is no results matched with rule's regexpr!"));
         }
         
-        
-        publish(new RuleTaskState(3, "[*] Testing finished!"));
         return null;
     }
     
@@ -89,15 +85,12 @@ public class WorkerTestRule extends SwingWorker<Void, RuleTaskState> {
     protected void process(List<RuleTaskState> chunks) {
         for (RuleTaskState chunk : chunks) {
             int progressValue = chunk.i;
-            String stringToLog = chunk.s;
+            String imageUrl = chunk.s;
             
             if (progressValue == -1) {
-                rd.addToMatchesList(stringToLog);
+                nbf.createWorkerByRuleMatch(rule, imageUrl);
                 continue;
             }
-            
-            rd.setTestingProgress(progressValue);
-            rd.addToLog(stringToLog);
         }
     }
 }

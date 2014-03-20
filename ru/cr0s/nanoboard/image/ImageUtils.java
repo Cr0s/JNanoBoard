@@ -21,18 +21,17 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
  */
-package cr0s.nanoboard.main.workers;
+package cr0s.nanoboard.image;
+
+import java.io.ByteArrayOutputStream;
 
 /**
- * A pair of two Integer and String values
- * @author user
+ * Image encoding and stegano routines
+ * @author Cr0s
  */
-public class TestTaskState {
-    public Integer i;
-    public String s;
-    
-    public TestTaskState(Integer i, String s) {
-        this.i = i;
-        this.s = s;
+public class ImageUtils {
+    public static byte[] tryToDecodeSteganoImage(ByteArrayOutputStream baos, String key) {
+        
+        return null;
     }
 }
