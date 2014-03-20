@@ -108,5 +108,27 @@ public class ByteUtils {
         }
 
         return hexString.toString();
+    }   
+    
+    /**
+     * Transforms hexadecimal string into byte array
+     * @param str
+     * @return 
+     */
+    public static byte[] stringToHash(String str) {
+        
+        if (str.length() % 2 == 1) {
+            throw new IllegalArgumentException("Invalid length");
+        }
+        
+        int len = str.length() / 2;
+        byte[] bytes = new byte[len];
+        
+        for (int i = 0; i < len; i++) {
+            int index = i * 2;
+            bytes[i] = (byte) Integer.parseInt(str.substring(index, index + 2), 16);
+        }
+        
+        return bytes;
     }    
 }

@@ -49,7 +49,7 @@ import javax.imageio.ImageIO;
  */
 public class ImageUtils {
 
-    public static byte[] tryToDecodeSteganoImage(byte[] bytes, String key) {
+    public static byte[] tryToDecodeSteganoImage(byte[] bytes, String key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
         try {
             // 1. Try to load as image
             BufferedImage img = ImageIO.read(new ByteArrayInputStream(bytes));
@@ -68,11 +68,7 @@ public class ImageUtils {
             }
 
             byte[] decryptedBytes = null;
-            try {
-                decryptedBytes = EncryptionProvider.decryptBytes(b, key.getBytes());
-            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException ex) {
-                return null;
-            }
+            decryptedBytes = EncryptionProvider.decryptBytes(b, key.getBytes());
             
             return decryptedBytes;
         } catch (IOException ex) {
@@ -82,7 +78,7 @@ public class ImageUtils {
         return null;
     }
     
-    public static byte[] tryToDecodeSteganoImage(ByteArrayOutputStream baos, String key) {
+    public static byte[] tryToDecodeSteganoImage(ByteArrayOutputStream baos, String key)  throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
         return tryToDecodeSteganoImage(baos.toByteArray(), key);
     }
     

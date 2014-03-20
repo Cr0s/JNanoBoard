@@ -119,7 +119,7 @@ public class NanoPost {
         ByteUtils.writeBytesToFile(npFileImg, this.sourceImageData);
         
         // Save post text
-        String postDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S").format(new Date(this.postTimestamp * 1000));
+        String postDate = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss").format(new Date(this.postTimestamp * 1000));
         File npFilePost = new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + "_"  + postDate + ".txt"); 
         ByteUtils.writeBytesToFile(npFilePost, this.postText.getBytes("UTF-8"));        
         

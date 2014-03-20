@@ -37,9 +37,15 @@ import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.swing.SwingWorker;
 
 /**
@@ -55,7 +61,7 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
     private int totalProgressValue;
     private String boardCode;
     private int tableRowIndex;
-    
+
     public WorkerSyncImage(NBFrame nbf, String boardCode, Rule rule, String imageUrl, int tableRowIndex) {
         this.nbf = nbf;
         this.boardCode = boardCode;
@@ -67,7 +73,7 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
     @Override
     protected Void doInBackground() {
         final int BUFFER_SIZE = 1024;
-        
+
         // 1. Download image
         BufferedInputStream bis = null;
         ByteArrayOutputStream baos = null;
@@ -75,42 +81,47 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
             URL url = new URL(imageUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             this.totalProgressValue = connection.getContentLength();
-            
+
             int totalDataRead = 0;
             bis = new BufferedInputStream(connection.getInputStream());
             baos = new ByteArrayOutputStream();
             try (BufferedOutputStream bos = new BufferedOutputStream(baos, BUFFER_SIZE)) {
                 byte[] data = new byte[BUFFER_SIZE];
                 int i = 0;
-                
+
                 while ((i = bis.read(data)) != -1) {
                     totalDataRead = totalDataRead + i;
                     baos.write(data, 0, i);
-                    
+
                     publish(new SyncTaskState(rule, imageUrl, "Downloading", totalDataRead));
                 }
-                
-                publish(new SyncTaskState(rule, imageUrl, "Processing", this.totalProgressValue));
-                
-                byte[] imageBytes = baos.toByteArray();
-                byte[] imageSteganoBytes = ImageUtils.tryToDecodeSteganoImage(imageBytes, boardCode);
-                
-                if (imageSteganoBytes != null) {
-                    try {
-                        NanoPost np = NanoPostFactory.getNanoPostFromBytes(imageSteganoBytes);
 
-                        if (!np.isAlreadyDownloaded()) {
-                            publish(new SyncTaskState(rule, imageUrl, "NEW NANOPOST", this.totalProgressValue));
-                            np.setSourceImageData(imageBytes);
-                            np.saveToFile();
-                        } else {
-                            publish(new SyncTaskState(rule, imageUrl, "SKIPPED", this.totalProgressValue));
+                publish(new SyncTaskState(rule, imageUrl, "Processing", this.totalProgressValue));
+
+                byte[] imageBytes = baos.toByteArray();
+                try {
+                    byte[] imageSteganoBytes = ImageUtils.tryToDecodeSteganoImage(imageBytes, boardCode);
+
+                    if (imageSteganoBytes != null) {
+                        try {
+                            NanoPost np = NanoPostFactory.getNanoPostFromBytes(imageSteganoBytes);
+
+                            if (!np.isAlreadyDownloaded()) {
+                                publish(new SyncTaskState(rule, imageUrl, "NEW NANOPOST", this.totalProgressValue));
+                                np.setSourceImageData(imageBytes);
+                                np.saveToFile();
+                            } else {
+                                publish(new SyncTaskState(rule, imageUrl, "SKIPPED", this.totalProgressValue));
+                            }
+                        } catch (IOException | MalformedNanoPostException ex) {
+                            publish(new SyncTaskState(rule, imageUrl, "Not an NanoPost", this.totalProgressValue));
                         }
-                    } catch (IOException | MalformedNanoPostException ex) {
+                    } else {
                         publish(new SyncTaskState(rule, imageUrl, "Not an NanoPost", this.totalProgressValue));
                     }
-                } else {
-                    publish(new SyncTaskState(rule, imageUrl, "Not an NanoPost", this.totalProgressValue));    
+                } catch (Exception ex) {
+                    //ex.printStackTrace();
+                    publish(new SyncTaskState(rule, imageUrl, "Not an NanoPost", this.totalProgressValue));
                 }
             }
         } catch (IOException ex) {
