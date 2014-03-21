@@ -23,12 +23,15 @@
  */
 package cr0s.nanoboard.nanopost;
 
+import cr0s.nanoboard.main.MainClass;
+import cr0s.nanoboard.stegano.EncryptionProvider;
 import cr0s.nanoboard.util.ByteUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,7 +41,6 @@ import java.util.logging.Logger;
  * @author Cr0s
  */
 public class NanoPost {
-    public static final String NANOPOSTS_DIR = "nanoposts";
     private byte[] postHash;
     private byte[] parentHash;
     private int postTimestamp;
@@ -69,7 +71,7 @@ public class NanoPost {
     }
     
     public boolean isOpPost() {
-        return ByteUtils.bytesToHexString(this.parentHash).equals("0000000000000000000000000000000000000000000000000000000000000000");
+        return Arrays.equals(this.parentHash, EncryptionProvider.EMPTY_HASH);
     }
     
     public NanoPostAttach getAttach() {
@@ -112,14 +114,14 @@ public class NanoPost {
     }
     
     public void saveToFile() throws IOException {
-        String nanopostsDir = System.getProperty("user.dir") + System.getProperty("file.separator") + NANOPOSTS_DIR + System.getProperty("file.separator");
+        String nanopostsDir = MainClass.NANOPOSTS_DIR + System.getProperty("file.separator");
         
         // Save nanopost file
         File npFileImg = new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + ".png"); 
         ByteUtils.writeBytesToFile(npFileImg, this.sourceImageData);
         
         // Save post text
-        String postDate = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss").format(new Date(this.postTimestamp * 1000));
+        String postDate = (new SimpleDateFormat("yyyy-MM-dd HH-mm-ss")).format(new Date(this.postTimestamp * 1000L));
         File npFilePost = new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + "_"  + postDate + ".txt"); 
         ByteUtils.writeBytesToFile(npFilePost, this.postText.getBytes("UTF-8"));        
         
@@ -132,7 +134,7 @@ public class NanoPost {
     }
     
     public boolean isAlreadyDownloaded() {
-        String nanopostsDir = System.getProperty("user.dir") + System.getProperty("file.separator") + NANOPOSTS_DIR + System.getProperty("file.separator");
+        String nanopostsDir = MainClass.NANOPOSTS_DIR + System.getProperty("file.separator");
         return new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + ".png").exists();
     }
 }
