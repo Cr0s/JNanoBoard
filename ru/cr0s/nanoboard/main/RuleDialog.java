@@ -293,6 +293,7 @@ public class RuleDialog extends javax.swing.JDialog {
         memoLog.setText("");
         memoMatches.setText("");
         
+        saveRule();
         WorkerTestRule worker = new WorkerTestRule(this, RulesManager.getInstance().getRuleByName(edName.getText()));
         worker.execute();
     }//GEN-LAST:event_btnBeginTestingActionPerformed
