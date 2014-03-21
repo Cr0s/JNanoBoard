@@ -24,6 +24,7 @@
 package cr0s.nanoboard.main;
 
 import cr0s.nanoboard.rules.RulesManager;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
@@ -53,6 +54,7 @@ public class MainClass {
             try {
               config.load(new FileInputStream(CONFIG_FILE));
             } catch (IOException e) {
+                (new File(CONFIG_FILE)).createNewFile();
                 e.printStackTrace();
             }            
             

@@ -29,23 +29,13 @@ import cr0s.nanoboard.nanopost.MalformedNanoPostException;
 import cr0s.nanoboard.nanopost.NanoPost;
 import cr0s.nanoboard.nanopost.NanoPostFactory;
 import cr0s.nanoboard.rules.Rule;
-import cr0s.nanoboard.util.ByteUtils;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.swing.SwingWorker;
 
 /**
