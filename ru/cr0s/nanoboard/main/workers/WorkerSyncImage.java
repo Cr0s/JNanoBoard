@@ -95,14 +95,16 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
                     if (imageSteganoBytes != null) {
                         try {
                             NanoPost np = NanoPostFactory.getNanoPostFromBytes(imageSteganoBytes);
-
+                            np.setSourceImageData(imageBytes);
+                            
                             if (!np.isAlreadyDownloaded()) {
                                 publish(new SyncTaskState(rule, imageUrl, "NEW NANOPOST", this.totalProgressValue));
-                                np.setSourceImageData(imageBytes);
                                 np.saveToFile();
                             } else {
                                 publish(new SyncTaskState(rule, imageUrl, "SKIPPED", this.totalProgressValue));
                             }
+                            
+                            nbf.addNanoPostToList(np);
                         } catch (IOException | MalformedNanoPostException ex) {
                             publish(new SyncTaskState(rule, imageUrl, "Not an NanoPost", this.totalProgressValue));
                         }

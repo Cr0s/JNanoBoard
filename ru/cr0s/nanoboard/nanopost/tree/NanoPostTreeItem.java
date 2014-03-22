@@ -23,10 +23,25 @@
  */
 package cr0s.nanoboard.nanopost.tree;
 
+import cr0s.nanoboard.main.NBFrame;
+import cr0s.nanoboard.main.NanoPostPanel;
+import cr0s.nanoboard.nanopost.NanoPost;
+
 /**
- * Tree of NanoPosts
+ * Item in NanoPosts tree
  * @author Cr0s
  */
-public class NanoPostTree {
+public class NanoPostTreeItem {
+    public NanoPost np;
+    public NanoPostPanel npPanel;
     
+    public NanoPostTreeItem(NanoPost np, NBFrame nbf) {
+        this.np = np;
+        this.npPanel = new NanoPostPanel(np, nbf);
+    }
+    
+    @Override
+    public String toString() {
+        return np.toString();
+    }
 }

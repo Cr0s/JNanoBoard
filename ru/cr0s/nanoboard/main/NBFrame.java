@@ -29,6 +29,7 @@ import cr0s.nanoboard.main.workers.WorkerSyncImage;
 import cr0s.nanoboard.nanopost.MalformedNanoPostException;
 import cr0s.nanoboard.nanopost.NanoPost;
 import cr0s.nanoboard.nanopost.NanoPostFactory;
+import cr0s.nanoboard.nanopost.tree.NanoPostTreeHelper;
 import cr0s.nanoboard.rules.Rule;
 import cr0s.nanoboard.rules.RulesManager;
 import cr0s.nanoboard.stegano.EncryptionProvider;
@@ -53,6 +54,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.filechooser.*;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  * Main program window
@@ -61,6 +63,7 @@ import javax.swing.filechooser.*;
 public class NBFrame extends javax.swing.JFrame {
 
     public ArrayList<WorkerSyncImage> syncWorkers;
+    public ArrayList<NanoPost> nanoPosts = new ArrayList<>();
     
     /**
      * Creates new form NBFrame
@@ -116,6 +119,12 @@ public class NBFrame extends javax.swing.JFrame {
         jButton1 = new javax.swing.JButton();
         jLabel6 = new javax.swing.JLabel();
         edParentHash = new javax.swing.JTextField();
+        jPanel8 = new javax.swing.JPanel();
+        jPanel9 = new javax.swing.JPanel();
+        scrollTree = new javax.swing.JScrollPane();
+        npTree = new javax.swing.JTree();
+        jPanel10 = new javax.swing.JPanel();
+        jButton2 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -534,6 +543,64 @@ public class NBFrame extends javax.swing.JFrame {
 
         tabs.addTab("Create NanoPost", jPanel1);
 
+        jPanel9.setBorder(javax.swing.BorderFactory.createTitledBorder("Posts tree"));
+
+        javax.swing.tree.DefaultMutableTreeNode treeNode1 = new javax.swing.tree.DefaultMutableTreeNode("root");
+        npTree.setModel(new javax.swing.tree.DefaultTreeModel(treeNode1));
+        scrollTree.setViewportView(npTree);
+
+        javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
+        jPanel9.setLayout(jPanel9Layout);
+        jPanel9Layout.setHorizontalGroup(
+            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(scrollTree)
+        );
+        jPanel9Layout.setVerticalGroup(
+            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(scrollTree, javax.swing.GroupLayout.DEFAULT_SIZE, 553, Short.MAX_VALUE)
+        );
+
+        jPanel10.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
+        jButton2.setText("Refresh");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
+        jPanel10.setLayout(jPanel10Layout);
+        jPanel10Layout.setHorizontalGroup(
+            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel10Layout.createSequentialGroup()
+                .addComponent(jButton2)
+                .addGap(0, 751, Short.MAX_VALUE))
+        );
+        jPanel10Layout.setVerticalGroup(
+            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel10Layout.createSequentialGroup()
+                .addComponent(jButton2)
+                .addGap(0, 0, Short.MAX_VALUE))
+        );
+
+        javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
+        jPanel8.setLayout(jPanel8Layout);
+        jPanel8Layout.setHorizontalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        jPanel8Layout.setVerticalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+
+        tabs.addTab("NanoPosts view", jPanel8);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -556,6 +623,10 @@ public class NBFrame extends javax.swing.JFrame {
         addRulesInTable();
         
         fcContainer.addChoosableFileFilter(new FileNameExtensionFilter("PNG files", "png"));
+        
+        npTree.setCellRenderer(new NanoPostTreeCellRenderer());
+        //npTree.setRootVisible(false);
+        npTree.setRowHeight(0);
     }//GEN-LAST:event_formWindowOpened
 
     private void btnAddRuleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddRuleActionPerformed
@@ -566,6 +637,7 @@ public class NBFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_btnAddRuleActionPerformed
 
     private void btnStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStartActionPerformed
+        nanoPosts.clear();
         tabs.setSelectedIndex(1);
 
         DefaultTableModel model = (DefaultTableModel) tableSync.getModel();
@@ -722,6 +794,12 @@ public class NBFrame extends javax.swing.JFrame {
         }
         
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        ((DefaultMutableTreeNode)npTree.getModel().getRoot()).removeAllChildren();
+        
+        NanoPostTreeHelper.addNanoPostsIntoTree(nanoPosts, npTree, this);
+    }//GEN-LAST:event_jButton2ActionPerformed
     
     public void addRulesInTable() {
         try {
@@ -764,6 +842,10 @@ public class NBFrame extends javax.swing.JFrame {
         wsi.execute();
     }
     
+    public void addNanoPostToList(NanoPost np) {
+        this.nanoPosts.add(np);
+    }
+    
     public RuleDialog ruleDialog;
     
     
@@ -782,6 +864,7 @@ public class NBFrame extends javax.swing.JFrame {
     private javax.swing.JFileChooser fcAttach;
     private javax.swing.JFileChooser fcContainer;
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -789,21 +872,35 @@ public class NBFrame extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel10;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel7;
+    private javax.swing.JPanel jPanel8;
+    private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JTree npTree;
     private javax.swing.JPanel panPostText;
     private javax.swing.JPanel panelRefresh;
     private javax.swing.JPanel panelSynch;
+    private javax.swing.JScrollPane scrollTree;
     private javax.swing.JTable tableRules;
     private javax.swing.JTable tableSync;
     private javax.swing.JTabbedPane tabs;
     private javax.swing.JTextArea txtPostText;
     // End of variables declaration//GEN-END:variables
+
+    void replyToPost(NanoPost np) {
+        tabs.setSelectedIndex(2);
+        edParentHash.setText(np.getPostHash());
+        
+        txtPostText.setText("");
+        edAttachFile.setText("");
+        edContainerFile.setText("");
+    }
 }

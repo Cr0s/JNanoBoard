@@ -23,6 +23,7 @@
  */
 package cr0s.nanoboard.nanopost;
 
+import cr0s.nanoboard.main.MainClass;
 import cr0s.nanoboard.stegano.EncryptionProvider;
 import cr0s.nanoboard.util.ByteUtils;
 import java.io.ByteArrayInputStream;
@@ -113,7 +114,7 @@ public class NanoPostFactory {
                 byte[] attachData = new byte[attachSize];
                 dis.read(attachData);
                 
-                att = new NanoPostAttach(attachData, attachFileName, null);
+                att = new NanoPostAttach(attachData, attachFileName, new File(MainClass.NANOPOSTS_DIR + System.getProperty("file.separator") + ByteUtils.bytesToHexString(postHash) + "_" + attachFileName));
             }
 
             int postTimestamp = 0;

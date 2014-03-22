@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,6 +50,8 @@ public class NanoPost {
     private NanoPostAttach attachData;
     
     private byte[] sourceImageData;
+    
+    private LinkedList<NanoPost> childs = new LinkedList<>();
     
     public NanoPost(byte[] postHash, byte[] parentHash, String postText, int postTimestamp, NanoPostAttach attachData) {
         this.postHash = postHash;
@@ -117,11 +120,10 @@ public class NanoPost {
         String nanopostsDir = MainClass.NANOPOSTS_DIR + System.getProperty("file.separator");
         
         // Save nanopost file
-        File npFileImg = new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + ".png"); 
-        ByteUtils.writeBytesToFile(npFileImg, this.sourceImageData);
+        ByteUtils.writeBytesToFile(getNanoPostFile(), this.sourceImageData);
         
         // Save post text
-        String postDate = (new SimpleDateFormat("yyyy-MM-dd HH-mm-ss")).format(new Date(this.postTimestamp * 1000L));
+        String postDate = postDateToString();
         File npFilePost = new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + "_"  + postDate + ".txt"); 
         ByteUtils.writeBytesToFile(npFilePost, this.postText.getBytes("UTF-8"));        
         
@@ -136,5 +138,43 @@ public class NanoPost {
     public boolean isAlreadyDownloaded() {
         String nanopostsDir = MainClass.NANOPOSTS_DIR + System.getProperty("file.separator");
         return new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + ".png").exists();
+    }
+    
+    public File getNanoPostFile() {
+        String nanopostsDir = MainClass.NANOPOSTS_DIR + System.getProperty("file.separator");
+        return new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + ".png");       
+    }
+    
+    public String getShortHash() {
+        return getPostHash().substring(0, 10);
+    }
+    
+    public String postDateToString() {
+        return (new SimpleDateFormat("yyyy-MM-dd HH-mm-ss")).format(new Date(this.postTimestamp * 1000L));    
+    }
+    
+    public void addChild(NanoPost np) {
+        this.childs.add(np);
+    }
+    
+    public LinkedList<NanoPost> getChilds() {
+        return this.childs;
+    }
+    
+    public boolean isParentOf(NanoPost np) {
+        return !np.isOpPost() && Arrays.equals(this.postHash, np.parentHash);
+    }
+    
+    @Override
+    public String toString() {
+        if (this.attachData == null) {
+            return String.format("%s (%s)", getShortHash(), postDateToString());
+        } else {
+            if (this.attachData.getLocalFile() != null) {
+                return String.format("%s (%s) - %s (%.2f Mb)", getShortHash(), postDateToString(), this.attachData.getFileName(), (this.attachData.getLocalFile().length() / 1024.0f / 1024.0f));
+            } else {
+                return String.format("%s (%s) - %s", getShortHash(), postDateToString(), this.attachData.getFileName());                
+            }
+        }
     }
 }

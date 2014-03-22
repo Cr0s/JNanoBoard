@@ -80,4 +80,8 @@ public class NanoPostAttach {
         
         dos.write(ByteUtils.readBytesFromFile(localFile));
     }
+
+    public boolean isImage() {
+        return this.fileName.toLowerCase().endsWith(".png") || this.fileName.toLowerCase().endsWith(".jpg") || this.fileName.toLowerCase().endsWith(".jpeg") || this.fileName.toLowerCase().endsWith(".gif");
+    }
 }
