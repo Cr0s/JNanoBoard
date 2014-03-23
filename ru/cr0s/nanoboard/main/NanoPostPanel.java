@@ -23,6 +23,7 @@
  */
 package cr0s.nanoboard.main;
 
+import cr0s.nanoboard.html.HtmlUtils;
 import cr0s.nanoboard.nanopost.NanoPost;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -55,7 +56,7 @@ public class NanoPostPanel extends javax.swing.JPanel {
 
         initComponents();
 
-        this.panPostText.setText(np.getPostText());
+        this.panPostText.setText(HtmlUtils.stripHtmlTags(np.getPostText()));
         this.lblPostHeader.setText(np.toString());
 
         if (np.getAttach() != null) {
@@ -133,9 +134,12 @@ public class NanoPostPanel extends javax.swing.JPanel {
         jScrollPane2 = new javax.swing.JScrollPane();
         panPostText = new javax.swing.JEditorPane();
 
+        setBackground(new java.awt.Color(221, 221, 221));
         setBorder(new javax.swing.border.LineBorder(new java.awt.Color(255, 255, 255), 2, true));
 
-        panAttach.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 1, true));
+        panAttach.setBackground(new java.awt.Color(221, 221, 221));
+
+        lblImg.setBackground(new java.awt.Color(221, 221, 221));
 
         javax.swing.GroupLayout panAttachLayout = new javax.swing.GroupLayout(panAttach);
         panAttach.setLayout(panAttachLayout);
@@ -163,9 +167,14 @@ public class NanoPostPanel extends javax.swing.JPanel {
             .addComponent(lblPostHeader)
         );
 
+        jScrollPane2.setBorder(null);
+
         panPostText.setEditable(false);
-        panPostText.setBackground(new java.awt.Color(240, 240, 240));
+        panPostText.setBackground(new java.awt.Color(221, 221, 221));
+        panPostText.setBorder(null);
+        panPostText.setContentType("text/html"); // NOI18N
         panPostText.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        panPostText.setToolTipText("");
         jScrollPane2.setViewportView(panPostText);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -179,19 +188,19 @@ public class NanoPostPanel extends javax.swing.JPanel {
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(panAttach, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 449, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 2, Short.MAX_VALUE))))
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 444, Short.MAX_VALUE)
+                        .addGap(4, 4, 4))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap(13, Short.MAX_VALUE)
+                .addGap(0, 0, 0)
                 .addComponent(panPostHeader, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(6, 6, 6)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(panAttach, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 209, Short.MAX_VALUE))
-                .addContainerGap())
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 193, Short.MAX_VALUE))
+                .addGap(1, 1, 1))
         );
     }// </editor-fold>//GEN-END:initComponents
 

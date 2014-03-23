@@ -25,6 +25,7 @@ package cr0s.nanoboard.main;
 
 import cr0s.nanoboard.image.ImageUtils;
 import cr0s.nanoboard.main.workers.WorkerExecuteRule;
+import cr0s.nanoboard.main.workers.WorkerLocalSync;
 import cr0s.nanoboard.main.workers.WorkerSyncImage;
 import cr0s.nanoboard.nanopost.MalformedNanoPostException;
 import cr0s.nanoboard.nanopost.NanoPost;
@@ -39,11 +40,16 @@ import java.awt.Component;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,7 +75,9 @@ public class NBFrame extends javax.swing.JFrame {
 
     public ArrayList<WorkerSyncImage> syncWorkers;
     public ArrayList<NanoPost> nanoPosts = new ArrayList<>();
-    public ConcurrentHashMap<String, Boolean> downloadedUrls = new ConcurrentHashMap<>();;
+    public ConcurrentHashMap<String, Boolean> downloadedUrls = new ConcurrentHashMap<>();
+    public ConcurrentHashMap<String, Boolean> loadedNanoposts = new ConcurrentHashMap<>();
+    
     private NanoPost selectedNp = null;
     
     /**
@@ -111,6 +119,8 @@ public class NBFrame extends javax.swing.JFrame {
         jPanel6 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tableSync = new javax.swing.JTable();
+        jPanel11 = new javax.swing.JPanel();
+        pbLocalSync = new javax.swing.JProgressBar();
         jPanel1 = new javax.swing.JPanel();
         panPostText = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
@@ -138,8 +148,8 @@ public class NBFrame extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosed(java.awt.event.WindowEvent evt) {
-                formWindowClosed(evt);
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
             }
             public void windowOpened(java.awt.event.WindowEvent evt) {
                 formWindowOpened(evt);
@@ -327,7 +337,7 @@ public class NBFrame extends javax.swing.JFrame {
 
         tabs.addTab("Main", panelRefresh);
 
-        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder("Downloading and checking progress"));
+        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder("Online sync"));
 
         tableSync.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -381,7 +391,22 @@ public class NBFrame extends javax.swing.JFrame {
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 549, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 523, Short.MAX_VALUE)
+        );
+
+        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder("Loading offline NanoPosts"));
+
+        pbLocalSync.setStringPainted(true);
+
+        javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
+        jPanel11.setLayout(jPanel11Layout);
+        jPanel11Layout.setHorizontalGroup(
+            jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(pbLocalSync, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        jPanel11Layout.setVerticalGroup(
+            jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(pbLocalSync, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         javax.swing.GroupLayout panelSynchLayout = new javax.swing.GroupLayout(panelSynch);
@@ -390,14 +415,18 @@ public class NBFrame extends javax.swing.JFrame {
             panelSynchLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelSynchLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(panelSynchLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         panelSynchLayout.setVerticalGroup(
             panelSynchLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelSynchLayout.createSequentialGroup()
-                .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 36, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSynchLayout.createSequentialGroup()
+                .addComponent(jPanel11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         tabs.addTab("NanoPosts sync", panelSynch);
@@ -663,11 +692,10 @@ public class NBFrame extends javax.swing.JFrame {
         fcContainer.addChoosableFileFilter(new FileNameExtensionFilter("PNG files", "png"));
         
         npTree.setCellRenderer(new NanoPostTreeCellRenderer());
-        //npTree.setRootVisible(false);
         npTree.setRowHeight(0);
         npTree.setExpandsSelectedPaths(true); 
-        //npTree.setToggleClickCount(1);
-       // npTree.setEditable(true);
+        
+        loadImageUrls();
     }//GEN-LAST:event_formWindowOpened
 
     private void btnAddRuleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddRuleActionPerformed
@@ -687,6 +715,9 @@ public class NBFrame extends javax.swing.JFrame {
         {
            model.removeRow(i); 
         }        
+        
+        WorkerLocalSync wls = new WorkerLocalSync(this, edBoardCode.getText());
+        wls.execute();
         
         for (Rule r : RulesManager.getInstance().getRulesList()) {
             if (r.isIsEnabled()) {
@@ -756,17 +787,6 @@ public class NBFrame extends javax.swing.JFrame {
         
         RulesManager.getInstance().saveRules(MainClass.RULES_DIR);*/
     }//GEN-LAST:event_tableRulesInputMethodTextChanged
-
-    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
-        RulesManager.getInstance().saveRules(MainClass.RULES_DIR);
-        MainClass.config.setProperty("boardKey", this.edBoardCode.getText());
-        
-        try {
-            MainClass.config.store(new FileOutputStream(MainClass.CONFIG_FILE), "JNanoBoard config file");
-        } catch (IOException ex) {
-            Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_formWindowClosed
 
     private void edAttachFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_edAttachFileActionPerformed
         // TODO add your handling code here:
@@ -872,6 +892,18 @@ public class NBFrame extends javax.swing.JFrame {
         edParentHash.setText(selectedNp.getPostHash());
         tabs.setSelectedIndex(2);
     }//GEN-LAST:event_btnReplyActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        saveImageUrls();
+        RulesManager.getInstance().saveRules(MainClass.RULES_DIR);
+        MainClass.config.setProperty("boardKey", this.edBoardCode.getText());
+        
+        try {
+            MainClass.config.store(new FileOutputStream(MainClass.CONFIG_FILE), "JNanoBoard config file");
+        } catch (IOException ex) {
+            Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }  
+    }//GEN-LAST:event_formWindowClosing
     
     public void addRulesInTable() {
         try {
@@ -910,12 +942,42 @@ public class NBFrame extends javax.swing.JFrame {
     public synchronized void createWorkerByRuleMatch(Rule rule, String imageUrl) {
         ((DefaultTableModel) tableSync.getModel()).addRow(new Object[] { rule.getRuleName(), imageUrl, "-", new JProgressBar() });
         WorkerSyncImage wsi = new WorkerSyncImage(this, edBoardCode.getText(), rule, imageUrl, tableSync.getModel().getRowCount() - 1);
-        //syncWorkers.add(wsi);
         wsi.execute();
     }
     
     public void addNanoPostToList(NanoPost np) {
-        this.nanoPosts.add(np);
+        if (this.loadedNanoposts.get(np.getPostHash()) == null) {
+            this.nanoPosts.add(np);
+            this.loadedNanoposts.put(np.getPostHash(), Boolean.TRUE);
+        }
+    }
+    
+    public void loadImageUrls() {
+        try {  
+            List<String> lines = Files.readAllLines(Paths.get(MainClass.URLS_FILE), Charset.forName("UTF-8"));
+            
+            for (String url : lines) {
+                downloadedUrls.put(url, Boolean.TRUE);
+            }
+        } catch (IOException ex) {
+            File urlsFile = new File(MainClass.URLS_FILE);
+            if (!urlsFile.exists()) {
+                try {
+                    urlsFile.createNewFile();
+                } catch (IOException ex1) {
+                    Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+            }
+        }
+        
+    }
+    
+    private void saveImageUrls() {
+        try {
+            Files.write(Paths.get(MainClass.URLS_FILE), downloadedUrls.keySet(), Charset.forName("UTF-8"));
+        } catch (IOException ex) {
+            Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     public RuleDialog ruleDialog;
@@ -947,6 +1009,7 @@ public class NBFrame extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel7;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel10;
+    private javax.swing.JPanel jPanel11;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
@@ -963,6 +1026,7 @@ public class NBFrame extends javax.swing.JFrame {
     private javax.swing.JPanel panPostText;
     private javax.swing.JPanel panelRefresh;
     private javax.swing.JPanel panelSynch;
+    private javax.swing.JProgressBar pbLocalSync;
     private javax.swing.JScrollPane scrollTree;
     private javax.swing.JTable tableRules;
     private javax.swing.JTable tableSync;
@@ -977,5 +1041,12 @@ public class NBFrame extends javax.swing.JFrame {
         txtPostText.setText("");
         edAttachFile.setText("");
         edContainerFile.setText("");
+    }
+
+    public void setLocalSyncProgress(String status, int progressValue, int totalProgressValue) {
+        pbLocalSync.setMaximum(totalProgressValue);
+        pbLocalSync.setValue(progressValue);
+        
+        pbLocalSync.setString(String.format("%s (%.1f ", status, pbLocalSync.getPercentComplete() * 100) + "%)");
     }
 }

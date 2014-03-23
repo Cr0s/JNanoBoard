@@ -23,6 +23,7 @@
  */
 package cr0s.nanoboard.main;
 
+import cr0s.nanoboard.html.HtmlUtils;
 import cr0s.nanoboard.rules.RulesManager;
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,10 +37,11 @@ import java.util.logging.Logger;
  * @author Cr0s
  */
 public class MainClass {
-    public static final String VERSION = "0.5a";
+    public static final String VERSION = "1.0a";
     public static final String RULES_DIR = System.getProperty("user.dir") + System.getProperty("file.separator") + "rules";
     public static final String NANOPOSTS_DIR = System.getProperty("user.dir") + System.getProperty("file.separator") + "nanoposts";
     public static final String CONFIG_FILE = System.getProperty("user.dir") + System.getProperty("file.separator") + "JNanoBoard.properties";
+    public static final String URLS_FILE = NANOPOSTS_DIR + System.getProperty("file.separator") + "urls.txt";
     
     public static NBFrame mainFrame;
     
@@ -47,7 +49,7 @@ public class MainClass {
     public static void main(String[] args) {
         try {
             System.out.println("[ JNanoBoard version: " + VERSION + "]");
-
+            
             RulesManager.getInstance().loadRules(RULES_DIR);      
 
             config = new Properties();

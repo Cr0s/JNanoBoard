@@ -67,9 +67,9 @@ public class NanoPostFactory {
 
             // Whole nanopost data to check (including parent hash)
             byte[] npData = new byte[dataLength - EncryptionProvider.HASH_SIZE_BYTES];
-            dis.readFully(npData);//, EncryptionProvider.HASH_SIZE_BYTES, 2 * EncryptionProvider.HASH_SIZE_BYTES);
+            dis.readFully(npData);
 
-            //System.out.println("[H] Bytes: " + ByteUtils.bytesToHexString(npData));
+
             dataHashToCheck = EncryptionProvider.sha512(npData);
             
             boolean result = Arrays.equals(postHash, dataHashToCheck);
@@ -86,11 +86,11 @@ public class NanoPostFactory {
             byte[] parentHash = new byte[EncryptionProvider.HASH_SIZE_BYTES];
             dis.readFully(parentHash, 0, EncryptionProvider.HASH_SIZE_BYTES);
 
-            System.out.println("[H] Post hash   : " + ByteUtils.bytesToHexString(postHash) + " | Parent hash: " + ByteUtils.bytesToHexString(parentHash));
+            //System.out.println("[H] Post hash   : " + ByteUtils.bytesToHexString(postHash) + " | Parent hash: " + ByteUtils.bytesToHexString(parentHash));
 
             // 5. Read post data
             byte[] postData = new byte[dataLength - (2 * EncryptionProvider.HASH_SIZE_BYTES)];
-            dis.readFully(postData);//, (2 * EncryptionProvider.HASH_SIZE_BYTES), dataLength);
+            dis.readFully(postData);
             dis = new DataInputStream(new ByteArrayInputStream(postData));
 
             // 6. Read post text
@@ -100,7 +100,6 @@ public class NanoPostFactory {
             
             // 7. Read post attach data
             String attachFileName = dis.readUTF();
-            //System.out.println("[H] Attach filename : " + attachFileName); 
             
             NanoPostAttach att = null;
             
@@ -153,8 +152,6 @@ public class NanoPostFactory {
             }
             
             dos.writeInt((int)(System.currentTimeMillis() / 1000));
-            
-            //System.out.println("[F] Bytes: " + ByteUtils.bytesToHexString(baos.toByteArray()));
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(NanoPostFactory.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {

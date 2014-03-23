@@ -141,12 +141,12 @@ public class NanoPost {
     
     public boolean isAlreadyDownloaded() {
         String nanopostsDir = MainClass.NANOPOSTS_DIR + System.getProperty("file.separator");
-        return new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + ".png").exists();
+        return new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + ".nanopost.png").exists();
     }
     
     public File getNanoPostFile() {
         String nanopostsDir = MainClass.NANOPOSTS_DIR + System.getProperty("file.separator");
-        return new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + ".png");       
+        return new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + ".nanopost.png");       
     }
     
     public String getShortHash() {
