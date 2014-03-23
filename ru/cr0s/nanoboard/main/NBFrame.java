@@ -55,6 +55,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.filechooser.*;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
 
 /**
  * Main program window
@@ -627,6 +628,9 @@ public class NBFrame extends javax.swing.JFrame {
         npTree.setCellRenderer(new NanoPostTreeCellRenderer());
         //npTree.setRootVisible(false);
         npTree.setRowHeight(0);
+        npTree.setExpandsSelectedPaths(true); 
+        //npTree.setToggleClickCount(1);
+       // npTree.setEditable(true);
     }//GEN-LAST:event_formWindowOpened
 
     private void btnAddRuleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddRuleActionPerformed
@@ -799,6 +803,7 @@ public class NBFrame extends javax.swing.JFrame {
         ((DefaultMutableTreeNode)npTree.getModel().getRoot()).removeAllChildren();
         
         NanoPostTreeHelper.addNanoPostsIntoTree(nanoPosts, npTree, this);
+        npTree.expandPath(new TreePath(((DefaultMutableTreeNode)npTree.getModel().getRoot()).getPath()));
     }//GEN-LAST:event_jButton2ActionPerformed
     
     public void addRulesInTable() {
