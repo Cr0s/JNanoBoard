@@ -86,8 +86,7 @@ public class NanoPostFactory {
             byte[] parentHash = new byte[EncryptionProvider.HASH_SIZE_BYTES];
             dis.readFully(parentHash, 0, EncryptionProvider.HASH_SIZE_BYTES);
 
-            //System.out.println("[H] Post hash   : " + ByteUtils.bytesToHexString(postHash));
-            //System.out.println("[H] Parent hash : " + ByteUtils.bytesToHexString(parentHash));
+            System.out.println("[H] Post hash   : " + ByteUtils.bytesToHexString(postHash) + " | Parent hash: " + ByteUtils.bytesToHexString(parentHash));
 
             // 5. Read post data
             byte[] postData = new byte[dataLength - (2 * EncryptionProvider.HASH_SIZE_BYTES)];

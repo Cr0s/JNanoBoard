@@ -31,8 +31,12 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,7 +55,7 @@ public class NanoPost {
     
     private byte[] sourceImageData;
     
-    private LinkedList<NanoPost> childs = new LinkedList<>();
+    private ArrayList<NanoPost> childs = new ArrayList<>();
     
     public NanoPost(byte[] postHash, byte[] parentHash, String postText, int postTimestamp, NanoPostAttach attachData) {
         this.postHash = postHash;
@@ -149,6 +153,10 @@ public class NanoPost {
         return getPostHash().substring(0, 10);
     }
     
+    public int getPostTimestamp() {
+        return this.postTimestamp;
+    }
+    
     public String postDateToString() {
         return (new SimpleDateFormat("yyyy-MM-dd HH-mm-ss")).format(new Date(this.postTimestamp * 1000L));    
     }
@@ -157,24 +165,125 @@ public class NanoPost {
         this.childs.add(np);
     }
     
-    public LinkedList<NanoPost> getChilds() {
+    public ArrayList<NanoPost> getChilds() {
         return this.childs;
     }
     
     public boolean isParentOf(NanoPost np) {
-        return !np.isOpPost() && Arrays.equals(this.postHash, np.parentHash);
+        return /*!np.isOpPost() &&*/ Arrays.equals(this.postHash, np.parentHash);
     }
     
     @Override
     public String toString() {
+        String isOp = (this.isOpPost()) ? "[OP]" : "";
+        
         if (this.attachData == null) {
-            return String.format("%s (%s)", getShortHash(), postDateToString());
+            return String.format("%s (%s) %s", getShortHash(), postDateToString(), isOp);
         } else {
             if (this.attachData.getLocalFile() != null) {
-                return String.format("%s (%s) - %s (%.2f Mb)", getShortHash(), postDateToString(), this.attachData.getFileName(), (this.attachData.getLocalFile().length() / 1024.0f / 1024.0f));
+                return String.format("%s (%s) - %s (%.2f Mb) %s", getShortHash(), postDateToString(), this.attachData.getFileName(), (this.attachData.getLocalFile().length() / 1024.0f / 1024.0f), isOp);
             } else {
-                return String.format("%s (%s) - %s", getShortHash(), postDateToString(), this.attachData.getFileName());                
+                return String.format("%s (%s) - %s %s", getShortHash(), postDateToString(), this.attachData.getFileName(), isOp);                
             }
         }
+    }
+    
+    /**
+     * Gets last NanoPost's child in childs list
+     * @return 
+     */
+    public NanoPost getLastChildPost() {
+        if (!this.childs.isEmpty()) {
+            return this.childs.get(this.childs.size() - 1);
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+     * Sorts NanoPosts OP-s by timestamp (newest at the top), check for bumps of OP-s and raise bumped OP-s up
+     * @param nanoposts 
+     */
+    public static void sortNanoPostsOpsByTimestamp(ArrayList<NanoPost> nanoposts) {
+        ArrayList<NanoPost> nonOps = new ArrayList<>();
+
+        // Remove from main list all non-ops and save removed non-ops in other list
+        for (Iterator<NanoPost> i = nanoposts.listIterator(); i.hasNext();) {
+            NanoPost item = i.next();
+            
+            if (!item.isOpPost()) {
+                nonOps.add(item);
+                
+                i.remove();
+            }   
+        }      
+        
+        // Sorting only OP-posts remaining
+        Collections.sort(nanoposts, new Comparator<NanoPost>(){
+            @Override
+            public int compare(NanoPost p1, NanoPost p2) {
+                if (p1.isOpPost() && p2.isOpPost()) {
+                    
+                    int ts1 = p1.getPostTimestamp();
+                    int ts2 = p2.getPostTimestamp();
+                    
+                    // Checking bump condition
+                    // Last child post in one thread is newer than last child post in other thread
+                    NanoPost p1Bump = p1.getLastChildPost();
+                    NanoPost p2Bump = p2.getLastChildPost();     
+                    
+                    if (p1Bump != null) {
+                        ts1 = p1Bump.getPostTimestamp();
+                    }
+
+                    if (p2Bump != null) {
+                        ts2 = p2Bump.getPostTimestamp();
+                    }
+           
+                    return ts2 - ts1;
+                } else {
+                    return 0;
+                }
+            }
+        });  
+        
+        // Append non-ops posts to the end
+        nanoposts.addAll(nonOps);
+    }
+    
+    /**
+     * Sorts NanoPost's childs by timestamp (oldest at thebtop)
+     * @param np 
+     */
+    public static void sortNanoPostsChildsByTimestamp(NanoPost np) {
+        if (np.getChilds().isEmpty()) {
+            return;
+        }
+        
+        Collections.sort(np.getChilds(), new Comparator<NanoPost>(){
+            @Override
+            public int compare(NanoPost p1, NanoPost p2) {
+                return p1.getPostTimestamp() - p2.getPostTimestamp();
+            }
+        });         
+    }
+    
+    /**
+     * Adds chils in childs list by checking parentness relationship in hashes
+     * @param npList list of NanoPosts
+     */
+    public static void addChildsToNanoPostsInList(ArrayList<NanoPost> npList) {
+        for (NanoPost np : npList) {
+            np.getChilds().clear();
+            
+            for (NanoPost npp : npList) {
+                if (np.isParentOf(npp)) {
+                    np.addChild(npp);
+                }
+            }
+            
+            // Sort childs by timestamp
+            sortNanoPostsChildsByTimestamp(np);
+        }       
     }
 }

@@ -36,17 +36,6 @@ import javax.swing.tree.DefaultMutableTreeNode;
 public class NanoPostTreeHelper {
     
     public static void addNanoPostsIntoTree(ArrayList<NanoPost> npList, JTree tree, NBFrame nbf) {
-        // Add childs for nanoposts in list
-        for (NanoPost np : npList) {
-            np.getChilds().clear();
-            
-            for (NanoPost npp : npList) {
-                if (np.isParentOf(npp)) {
-                    np.addChild(npp);
-                }
-            }
-        }
-        
         // Add all OP posts and their child posts in tree
         DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode)tree.getModel().getRoot();
         

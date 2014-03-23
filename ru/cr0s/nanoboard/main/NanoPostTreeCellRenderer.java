@@ -51,6 +51,7 @@ public class NanoPostTreeCellRenderer implements TreeCellRenderer {
             
             if (userObject instanceof NanoPostTreeItem) {
                 NanoPostTreeItem npti = (NanoPostTreeItem) userObject;
+                npti.npPanel.setSelected(selected);
                 returnValue = npti.npPanel;
             }
         }

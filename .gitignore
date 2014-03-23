@@ -215,3 +215,8 @@ pip-log.txt
 .mr.developer.cfg
 
 JNanoBoard.properties
+JNanoBoard.jar
+JNanoBoard.zip
+
+nanoposts/*
+rules/*

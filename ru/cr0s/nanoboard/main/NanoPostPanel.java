@@ -1,12 +1,30 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ The MIT License (MIT)
+
+ Copyright (c) 2014 Cr0s
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
  */
 package cr0s.nanoboard.main;
 
 import cr0s.nanoboard.nanopost.NanoPost;
-import java.awt.Dimension;
-import java.awt.Graphics;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -15,11 +33,12 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
-import javax.swing.JPanel;
+import javax.swing.UIManager;
 
 /**
- *
+ * NanoPost rendering panel. Renders NanoPost content as tree item
  * @author user
  */
 public class NanoPostPanel extends javax.swing.JPanel {
@@ -114,7 +133,7 @@ public class NanoPostPanel extends javax.swing.JPanel {
         jScrollPane2 = new javax.swing.JScrollPane();
         panPostText = new javax.swing.JEditorPane();
 
-        setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        setBorder(new javax.swing.border.LineBorder(new java.awt.Color(255, 255, 255), 2, true));
 
         panAttach.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 1, true));
 
@@ -145,6 +164,7 @@ public class NanoPostPanel extends javax.swing.JPanel {
         );
 
         panPostText.setEditable(false);
+        panPostText.setBackground(new java.awt.Color(240, 240, 240));
         panPostText.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
         jScrollPane2.setViewportView(panPostText);
 
@@ -160,18 +180,18 @@ public class NanoPostPanel extends javax.swing.JPanel {
                         .addComponent(panAttach, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 449, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))))
+                        .addGap(0, 2, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(11, 11, 11)
+                .addContainerGap(13, Short.MAX_VALUE)
                 .addComponent(panPostHeader, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(6, 6, 6)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
-                    .addComponent(panAttach, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(panAttach, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 209, Short.MAX_VALUE))
+                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -183,4 +203,12 @@ public class NanoPostPanel extends javax.swing.JPanel {
     private javax.swing.JPanel panPostHeader;
     private javax.swing.JEditorPane panPostText;
     // End of variables declaration//GEN-END:variables
+
+    void setSelected(boolean selected) {
+        if (selected) {
+            this.setBorder(BorderFactory.createLineBorder(Color.ORANGE, 2, true));
+        } else {
+            this.setBorder(BorderFactory.createLineBorder(UIManager.getColor("Tree.textBackground"), 2, true));
+        }
+    }
 }

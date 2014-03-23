@@ -101,7 +101,7 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
                                 publish(new SyncTaskState(rule, imageUrl, "NEW NANOPOST", this.totalProgressValue));
                                 np.saveToFile();
                             } else {
-                                publish(new SyncTaskState(rule, imageUrl, "SKIPPED", this.totalProgressValue));
+                                publish(new SyncTaskState(rule, imageUrl, "IN SYNC", this.totalProgressValue));
                             }
                             
                             nbf.addNanoPostToList(np);

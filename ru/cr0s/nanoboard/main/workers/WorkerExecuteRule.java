@@ -39,34 +39,35 @@ import javax.swing.SwingWorker;
 
 /**
  * Rule testing worker
+ *
  * @author Cr0s
  */
 public class WorkerExecuteRule extends SwingWorker<Void, RuleTaskState> {
 
     private NBFrame nbf;
     private Rule rule;
-    
+
     public WorkerExecuteRule(NBFrame nbf, Rule rule) {
         this.nbf = nbf;
         this.rule = rule;
     }
-    
+
     @Override
     protected Void doInBackground() {
         String htmlPage = "";
-        
+
         try {
             htmlPage = HttpDownloader.getString(rule.getRuleURL());
-        } catch(MalformedURLException ex) { 
+        } catch (MalformedURLException ex) {
             //this.cancel(true);
             return null;
         } catch (IOException ex) {
             //this.cancel(true);
-            return null;            
+            return null;
         }
-        
+
         RuleDrivenTextParser rdtp = new RuleDrivenTextParser(rule);
-        
+
         ArrayList<String> resultList = rdtp.parseTextByRule(htmlPage);
         if (resultList.size() > 0) {
             for (String s : resultList) {
@@ -77,19 +78,23 @@ public class WorkerExecuteRule extends SwingWorker<Void, RuleTaskState> {
                 }
             }
         }
-        
+
         return null;
     }
-    
+
     @Override
     protected void process(List<RuleTaskState> chunks) {
         for (RuleTaskState chunk : chunks) {
             int progressValue = chunk.i;
             String imageUrl = chunk.s;
-            
+
             if (progressValue == -1) {
+                if (nbf.downloadedUrls.get(imageUrl) != null && nbf.downloadedUrls.get(imageUrl)) {
+                    continue;
+                }
+
                 nbf.createWorkerByRuleMatch(rule, imageUrl);
-                continue;
+                nbf.downloadedUrls.put(imageUrl, Boolean.TRUE);
             }
         }
     }
