@@ -70,6 +70,8 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
         try {
             URL url = new URL(imageUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestProperty("User-Agent", "User-Agent: Mozilla/5.0 (Windows NT 6.1; rv:27.0) Gecko/20100101 Firefox/27.0");
+            
             this.totalProgressValue = connection.getContentLength();
 
             int totalDataRead = 0;

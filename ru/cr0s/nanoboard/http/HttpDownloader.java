@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -56,7 +57,10 @@ public class HttpDownloader {
 
         try {
             url = new URL(urlString);
-            is = url.openStream();  // throws an IOException
+            HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+            connection.setRequestProperty("User-Agent", "User-Agent: Mozilla/5.0 (Windows NT 6.1; rv:27.0) Gecko/20100101 Firefox/27.0");
+            
+            is = connection.getInputStream();
             br = new BufferedReader(new InputStreamReader(is));
 
             while ((line = br.readLine()) != null) {
