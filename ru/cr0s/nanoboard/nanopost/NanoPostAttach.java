@@ -84,4 +84,8 @@ public class NanoPostAttach {
     public boolean isImage() {
         return this.fileName.toLowerCase().endsWith(".png") || this.fileName.toLowerCase().endsWith(".jpg") || this.fileName.toLowerCase().endsWith(".jpeg") || this.fileName.toLowerCase().endsWith(".gif");
     }
+    
+    public void clearBinaryData() {
+        this.attachData = null; // dispose byte array to allow GC to collect it
+    }
 }

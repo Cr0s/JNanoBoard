@@ -843,15 +843,16 @@ public class NBFrame extends javax.swing.JFrame {
         
         try {
             byte[] dataBytes = ImageUtils.tryToDecodeSteganoImage(ByteUtils.readBytesFromFile(new File(containerFile.toString() + ".nanopost.png")), edBoardCode.getText());
-            try {
-                NanoPost nanoPost = NanoPostFactory.getNanoPostFromBytes(dataBytes);
-                nanoPost.setSourceImageData(ByteUtils.readBytesFromFile(new File(containerFile.toString() + ".nanopost.png")));
-                nanoPost.saveToFile();
-            } catch (MalformedNanoPostException ex) {
-                Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | IOException ex) {
-            Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);
+
+            NanoPost nanoPost = NanoPostFactory.getNanoPostFromBytes(dataBytes);
+            nanoPost.setSourceImageData(ByteUtils.readBytesFromFile(new File(containerFile.toString() + ".nanopost.png")));
+            nanoPost.saveToFile();
+
+            // Trying to free memory
+            nanoPost = null;
+            dataBytes = null;
+        } catch (MalformedNanoPostException | IOException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException ex) {
+            JOptionPane.showMessageDialog(null, ex.getLocalizedMessage(), "An error occured", JOptionPane.ERROR_MESSAGE);
         }
         
     }//GEN-LAST:event_jButton1ActionPerformed

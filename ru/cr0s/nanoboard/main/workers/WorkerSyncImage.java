@@ -106,6 +106,9 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
                                 publish(new SyncTaskState(rule, imageUrl, "IN SYNC", this.totalProgressValue));
                             }
                             
+                            imageSteganoBytes = null;
+                            imageBytes = null;
+                            np.clearAllBinaryData();
                             nbf.addNanoPostToList(np);
                         } catch (IOException | MalformedNanoPostException ex) {
                             publish(new SyncTaskState(rule, imageUrl, "Not an NanoPost", this.totalProgressValue));
@@ -127,6 +130,7 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
                 publish(new SyncTaskState(rule, imageUrl, "IO Error", 0));
             }
         }
+        
         return null;
     }
 

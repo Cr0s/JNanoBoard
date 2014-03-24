@@ -37,7 +37,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -197,6 +196,17 @@ public class NanoPost {
             return this.childs.get(this.childs.size() - 1);
         } else {
             return null;
+        }
+    }
+    
+    /**
+     * Disposes all binary data to make attempt to free memory by allowing GC to collect these binary arrays
+     */
+    public void clearAllBinaryData() {
+        this.sourceImageData = null;
+        
+        if (this.attachData != null) {
+            this.attachData.clearBinaryData();
         }
     }
     
