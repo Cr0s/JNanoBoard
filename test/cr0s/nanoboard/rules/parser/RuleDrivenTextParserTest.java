@@ -73,7 +73,6 @@ public class RuleDrivenTextParserTest {
      */
     @Test
     public void testParseTextByRule_rule1_match() {
-        System.out.println("= RuleDrivenTextParser.parseTextByRule");
         ArrayList<String> matches = rdtpTestRule1.parseTextByRule(RULE1_TEST_TEXT);
         String[] matchesArray = new String[matches.size()];
         matchesArray = matches.toArray(matchesArray);

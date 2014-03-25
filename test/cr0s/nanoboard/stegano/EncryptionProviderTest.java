@@ -68,7 +68,6 @@ public class EncryptionProviderTest {
      */
     @Test
     public void testEncryptBytes() throws Exception {
-        System.out.println("= EncryptionProvider.testEncryptBytes =");
         byte[] bytes = DECRYPTED_TEST_MESSAGE.getBytes("UTF-8");
         byte[] keyValue = ENCRYPTION_KEY.getBytes("UTF-8");
         
@@ -82,7 +81,6 @@ public class EncryptionProviderTest {
      */
     @Test
     public void testDecryptBytes() throws Exception {
-        System.out.println("= EncryptionProvider.testDecryptBytes =");
         byte[] bytes = ByteUtils.stringToBytes(ENCRYPTED_TEST_MESSAGE);
         
         byte[] keyValue = ENCRYPTION_KEY.getBytes("UTF-8");
@@ -98,7 +96,6 @@ public class EncryptionProviderTest {
      */
     @Test (expected=Exception.class)
     public void testDecryptBytesWrongKey() throws Exception {
-        System.out.println("= EncryptionProvider.testDecryptBytesWrongKey =");
         byte[] bytes = ByteUtils.stringToBytes(ENCRYPTED_TEST_MESSAGE);
         
         byte[] keyValue = "thisisawrongkey".getBytes("UTF-8");
@@ -113,7 +110,6 @@ public class EncryptionProviderTest {
      */
     @Test
     public void testSha512Hashlength() throws UnsupportedEncodingException {
-        System.out.println("= EncryptionProvider.sha512 hash length test =");
         byte[] bytes = "fooBarBAZ".getBytes("UTF-8");
         
         int expResult = EncryptionProvider.HASH_SIZE_BYTES;
@@ -128,7 +124,6 @@ public class EncryptionProviderTest {
      */
     @Test
     public void testSha512Equality() throws UnsupportedEncodingException {
-        System.out.println("= EncryptionProvider.sha512 `H(x) = H(x); x = x` test =");
         byte[] bytes = "fooBarBAZ".getBytes("UTF-8");
         
         byte[] hashBytes1 = EncryptionProvider.sha512(bytes);
@@ -142,7 +137,6 @@ public class EncryptionProviderTest {
      */
     @Test
     public void testSha512Inequality() throws UnsupportedEncodingException {
-        System.out.println("= EncryptionProvider.sha512 `H(x) != H(y); x != y` test =");
         byte[] bytes1 = "fooBarBAZ".getBytes("UTF-8");
         byte[] bytes2 = "fooBarBAY".getBytes("UTF-8");
         

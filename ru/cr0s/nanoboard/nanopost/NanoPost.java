@@ -296,4 +296,12 @@ public class NanoPost {
             sortNanoPostsChildsByTimestamp(np);
         }       
     }
+
+    /**
+     * Sets attach data to specified NanoPostAttach object
+     * @param npa attach info
+     */
+    void setAttach(NanoPostAttach npa) {
+        this.attachData = npa;
+    }
 }

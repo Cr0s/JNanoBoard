@@ -42,20 +42,25 @@ public class NanoPostTest {
     private static NanoPost opNp1;
     private static NanoPost opNp1Child;
     
+    private static final String np1Text = "NanoPost #1 test.";
+    private static final String opNp1Text = "OP-post #1 test.";
+    private static final String opNp1ChildText = "Child of opNp1 test NanoPost.";
+    private static final String np2WithAttachText = "NanoPost #2 test with attach";
     public NanoPostTest() {
     }
     
     @BeforeClass
     public static void setUpClass() {
-        np1 = new NanoPost(ByteUtils.stringToBytes(""), ByteUtils.stringToBytes(""), "Test post text.", 0, null);
+        np1 = NanoPostFactory.createNanoPost(np1Text, EncryptionProvider.sha512(new byte[] { 1, 2, 3, 4, 5 }), null);
         
-        opNp1 = new NanoPost(ByteUtils.stringToBytes(""), EncryptionProvider.EMPTY_HASH, "Test OP post text", 0, null);
-        opNp1Child = new NanoPost(ByteUtils.stringToBytes(""), ByteUtils.stringToBytes(""), "Test post text.", 0, null);
+        opNp1 = NanoPostFactory.createNanoPost(opNp1Text, EncryptionProvider.EMPTY_HASH, null);
         
+        opNp1Child = NanoPostFactory.createNanoPost(opNp1ChildText, ByteUtils.stringToBytes(opNp1.getPostHash()), null);
         opNp1.addChild(opNp1Child);
         
         NanoPostAttach npa = new NanoPostAttach(new byte[] { 1, 2, 3, 4, 5, 6 }, "testfile", null);
-        np2WithAttach = new NanoPost(ByteUtils.stringToBytes(""), ByteUtils.stringToBytes(""), "Test post text.", 0, npa);
+        np2WithAttach = NanoPostFactory.createNanoPost(np2WithAttachText, EncryptionProvider.sha512(new byte[] { 1, 2, 3, 4, 5 }), null);
+        np2WithAttach.setAttach(npa);
     }
     
     @AfterClass
@@ -73,6 +78,10 @@ public class NanoPostTest {
      */
     @Test
     public void testGetPostHash() {
+        assertEquals(np1Text, np1.getPostText());
+        assertEquals(opNp1Text, opNp1.getPostText());
+        assertEquals(opNp1ChildText, opNp1Child.getPostText());
+        assertEquals(np2WithAttachText, np2WithAttach.getPostText());
     }
 
     /**
@@ -80,6 +89,7 @@ public class NanoPostTest {
      */
     @Test
     public void testGetParentHash() {
+        
     }
 
     /**
@@ -95,6 +105,7 @@ public class NanoPostTest {
     @Test
     public void testIsOpPost() {
         assertTrue(opNp1.isOpPost());
+        assertFalse(opNp1Child.isOpPost());
     }
 
     /**
@@ -102,8 +113,8 @@ public class NanoPostTest {
      */
     @Test
     public void testGetAttach() {
-        assertTrue(np1.getAttach() == null);
-        assertTrue(np2WithAttach.getAttach() != null);        
+        assertNull(np1.getAttach());
+        assertNotNull(np2WithAttach.getAttach());        
     }
 
     /**
@@ -174,19 +185,26 @@ public class NanoPostTest {
 //    public void testAddChild() {
 //    }
 //
-//    /**
-//     * Test of getChilds method, of class NanoPost.
-//     */
-//    @Test
-//    public void testGetChilds() {
-//    }
+    /**
+     * Test of getChilds method, of class NanoPost.
+     */
+    @Test
+    public void testGetChilds() {
+        assertTrue(np1.getChilds().isEmpty());
+        
+        assertFalse(opNp1.getChilds().isEmpty());
+        assertTrue(opNp1.getChilds().size() == 1);
+    }
 //
-//    /**
-//     * Test of isParentOf method, of class NanoPost.
-//     */
-//    @Test
-//    public void testIsParentOf() {
-//    }
+    /**
+     * Test of isParentOf method, of class NanoPost.
+     */
+    @Test
+    public void testIsParentOf() {
+        assertTrue(opNp1.isParentOf(opNp1Child));
+        assertFalse(opNp1.isParentOf(np1));
+        assertFalse(np2WithAttach.isParentOf(np1));
+    }
 //
 //    /**
 //     * Test of toString method, of class NanoPost.
@@ -195,12 +213,15 @@ public class NanoPostTest {
 //    public void testToString() {
 //    }
 //
-//    /**
-//     * Test of getLastChildPost method, of class NanoPost.
-//     */
-//    @Test
-//    public void testGetLastChildPost() {
-//    }
+    /**
+     * Test of getLastChildPost method, of class NanoPost.
+     */
+    @Test
+    public void testGetLastChildPost() {
+        assertNull(np1.getLastChildPost());
+        
+        assertSame(opNp1.getLastChildPost(), opNp1Child);
+    }
 //
 //    /**
 //     * Test of clearAllBinaryData method, of class NanoPost.
