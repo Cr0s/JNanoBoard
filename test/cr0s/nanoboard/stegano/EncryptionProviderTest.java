@@ -93,10 +93,26 @@ public class EncryptionProviderTest {
     }
 
     /**
+     * Test of decryptBytes method, of class EncryptionProvider.
+     * If in decryptor passed wrong key, Excepiton must be thrown
+     */
+    @Test (expected=Exception.class)
+    public void testDecryptBytesWrongKey() throws Exception {
+        System.out.println("= EncryptionProvider.testDecryptBytesWrongKey =");
+        byte[] bytes = ByteUtils.stringToBytes(ENCRYPTED_TEST_MESSAGE);
+        
+        byte[] keyValue = "thisisawrongkey".getBytes("UTF-8");
+        
+        byte[] expResult = DECRYPTED_TEST_MESSAGE.getBytes("UTF-8");
+        byte[] result = EncryptionProvider.decryptBytes(bytes, keyValue);
+        assertArrayEquals(expResult, result);
+    }    
+    
+    /**
      * Test of sha512 method. Hash length must be equals HASH_SIZE_BYTES.
      */
     @Test
-    public void testSha512_hashlength() throws UnsupportedEncodingException {
+    public void testSha512Hashlength() throws UnsupportedEncodingException {
         System.out.println("= EncryptionProvider.sha512 hash length test =");
         byte[] bytes = "fooBarBAZ".getBytes("UTF-8");
         
@@ -111,7 +127,7 @@ public class EncryptionProviderTest {
      * Tests equality condition. Two hashesh of same argument must be equals
      */
     @Test
-    public void testSha512_equality() throws UnsupportedEncodingException {
+    public void testSha512Equality() throws UnsupportedEncodingException {
         System.out.println("= EncryptionProvider.sha512 `H(x) = H(x); x = x` test =");
         byte[] bytes = "fooBarBAZ".getBytes("UTF-8");
         
@@ -125,7 +141,7 @@ public class EncryptionProviderTest {
      * Two hashes of different argument must be inequal
      */
     @Test
-    public void testSha512_inequality() throws UnsupportedEncodingException {
+    public void testSha512Inequality() throws UnsupportedEncodingException {
         System.out.println("= EncryptionProvider.sha512 `H(x) != H(y); x != y` test =");
         byte[] bytes1 = "fooBarBAZ".getBytes("UTF-8");
         byte[] bytes2 = "fooBarBAY".getBytes("UTF-8");

@@ -59,7 +59,6 @@ public class RuleDrivenTextParserTest {
     
     @BeforeClass
     public static void setUpClass() {
-        System.err.println(RULE1_TEST_REGEXP);
         testRule1 = new Rule("test rule", "http://localhost/", RULE1_TEST_REGEXP, true);
         rdtpTestRule1 = new RuleDrivenTextParser(testRule1);
     }
