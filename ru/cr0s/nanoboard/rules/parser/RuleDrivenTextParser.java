@@ -50,7 +50,7 @@ public class RuleDrivenTextParser {
         
         while (ruleMatcher.find()) {
             resultList.add(ruleMatcher.group(1));
-            ruleMatcher.find();
+            //ruleMatcher.find();
         }
         
         return resultList; 
