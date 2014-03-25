@@ -115,7 +115,7 @@ public class ByteUtils {
      * @param str
      * @return 
      */
-    public static byte[] stringToHash(String str) {
+    public static byte[] stringToBytes(String str) {
         
         if (str.length() % 2 == 1) {
             throw new IllegalArgumentException("Invalid length");

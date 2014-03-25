@@ -817,7 +817,7 @@ public class NBFrame extends javax.swing.JFrame {
         String parentHashStr = edParentHash.getText();
         if (!parentHashStr.trim().isEmpty()) {
             if ((parentHashStr.length() == EncryptionProvider.HASH_SIZE_BYTES * 2) && parentHashStr.matches("[a-f0-9]+")) {
-                parentHash = ByteUtils.stringToHash(parentHashStr);
+                parentHash = ByteUtils.stringToBytes(parentHashStr);
             }
         }        
         
