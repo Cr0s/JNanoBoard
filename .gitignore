@@ -220,3 +220,5 @@ JNanoBoard.zip
 
 nanoposts/*
 rules/*
+containers/*
+outbox/*

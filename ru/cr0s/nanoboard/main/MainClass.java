@@ -37,11 +37,13 @@ import java.util.logging.Logger;
  * @author Cr0s
  */
 public class MainClass {
-    public static final String VERSION = "1.0a";
+    public static final String VERSION = "1.1a";
     public static final String RULES_DIR = System.getProperty("user.dir") + System.getProperty("file.separator") + "rules";
-    public static final String NANOPOSTS_DIR = System.getProperty("user.dir") + System.getProperty("file.separator") + "outbox";
-    public static final String OUTBOX_DIR = System.getProperty("user.dir") + System.getProperty("file.separator") + "containers";
-    public static final String CONTAINERS_DIR = System.getProperty("user.dir") + System.getProperty("file.separator") + "rules";
+    public static final String NANOPOSTS_DIR = System.getProperty("user.dir") + System.getProperty("file.separator") + "nanoposts";
+    
+    public static final String OUTBOX_DIR = System.getProperty("user.dir") + System.getProperty("file.separator") + "outbox";
+    public static final String CONTAINERS_DIR = System.getProperty("user.dir") + System.getProperty("file.separator") + "containers";
+    
     public static final String CONFIG_FILE = System.getProperty("user.dir") + System.getProperty("file.separator") + "JNanoBoard.properties";
     public static final String URLS_FILE = NANOPOSTS_DIR + System.getProperty("file.separator") + "urls.txt";
     

@@ -37,6 +37,8 @@ import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,13 +65,12 @@ public class WorkerLocalSync extends SwingWorker<Void, SyncTaskState> {
 
     @Override
     protected Void doInBackground() {
+        // Scan nanoposts dir
         File dir = new File(MainClass.NANOPOSTS_DIR);
-        
         if (!dir.exists() || !dir.isDirectory()) {
             publish (new SyncTaskState(new Rule(), "", "Can't load nanoposts directory!", 0));
             return null;
         }
-        
         File[] files = dir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File directory, String fileName) {
@@ -77,8 +78,21 @@ public class WorkerLocalSync extends SwingWorker<Void, SyncTaskState> {
             }
         });
         
+        // Scan outbox directory
+        File dirOutbox = new File(MainClass.OUTBOX_DIR);
+        if (!dirOutbox.exists() || !dirOutbox.isDirectory()) {
+            publish (new SyncTaskState(new Rule(), "", "Can't load outbox directory!", 0));
+            return null;
+        }
+        File[] outbox = dirOutbox.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File directory, String fileName) {
+                return fileName.endsWith(".nanopost.png");
+            }
+        });        
+        
         int currentProgress = 0;
-        this.totalProgressValue = files.length;
+        this.totalProgressValue = files.length + outbox.length;
         
         for (File f : files) {
             try {
@@ -87,6 +101,7 @@ public class WorkerLocalSync extends SwingWorker<Void, SyncTaskState> {
                 try {
                     NanoPost nanoPost = NanoPostFactory.getNanoPostFromBytes(dataBytes);
                     nanoPost.setSourceImageData(ByteUtils.readBytesFromFile(f));
+                    nanoPost.setOutbox(false);
                     
                     nbf.addNanoPostToList(nanoPost);
                     
@@ -99,6 +114,27 @@ public class WorkerLocalSync extends SwingWorker<Void, SyncTaskState> {
                 Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);
             }            
         }
+        
+        for (File f : outbox) {
+            try {
+                byte[] dataBytes = ImageUtils.tryToDecodeSteganoImage(ByteUtils.readBytesFromFile(f), boardCode);
+
+                try {
+                    NanoPost nanoPost = NanoPostFactory.getNanoPostFromBytes(dataBytes);
+                    nanoPost.setSourceImageData(ByteUtils.readBytesFromFile(f));
+                    nanoPost.setOutbox(true);
+                    
+                    nbf.addNanoPostToList(nanoPost);
+                    
+                    currentProgress++;
+                    publish (new SyncTaskState(new Rule(), "", "outbox: " + nanoPost.toString(), currentProgress));
+                } catch (MalformedNanoPostException ex) {
+                    Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | IOException ex) {
+                Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }            
+        }        
         
         publish (new SyncTaskState(new Rule(), "", "Complete", this.totalProgressValue));
         return null;

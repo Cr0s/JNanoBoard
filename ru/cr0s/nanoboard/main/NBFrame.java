@@ -24,6 +24,7 @@
 package cr0s.nanoboard.main;
 
 import cr0s.nanoboard.image.ImageUtils;
+import cr0s.nanoboard.main.workers.SyncTaskState;
 import cr0s.nanoboard.main.workers.WorkerExecuteRule;
 import cr0s.nanoboard.main.workers.WorkerLocalSync;
 import cr0s.nanoboard.main.workers.WorkerSyncImage;
@@ -39,6 +40,7 @@ import cr0s.nanoboard.util.ByteUtils;
 import java.awt.Component;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -50,6 +52,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,6 +63,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.JTable;
+import javax.swing.JViewport;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.filechooser.*;
@@ -100,6 +104,7 @@ public class NBFrame extends javax.swing.JFrame {
 
         fcAttach = new javax.swing.JFileChooser();
         fcContainer = new javax.swing.JFileChooser();
+        btngrpContainer = new javax.swing.ButtonGroup();
         tabs = new javax.swing.JTabbedPane();
         panelRefresh = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
@@ -130,9 +135,10 @@ public class NBFrame extends javax.swing.JFrame {
         edAttachFile = new javax.swing.JTextField();
         btnSelectFile = new javax.swing.JButton();
         jPanel7 = new javax.swing.JPanel();
-        jLabel5 = new javax.swing.JLabel();
         edContainerFile = new javax.swing.JTextField();
         btnSelectContainerFile = new javax.swing.JButton();
+        rbRandomContainer = new javax.swing.JRadioButton();
+        rbFileContainer = new javax.swing.JRadioButton();
         jButton1 = new javax.swing.JButton();
         jLabel6 = new javax.swing.JLabel();
         edParentHash = new javax.swing.JTextField();
@@ -444,11 +450,11 @@ public class NBFrame extends javax.swing.JFrame {
         panPostText.setLayout(panPostTextLayout);
         panPostTextLayout.setHorizontalGroup(
             panPostTextLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 794, Short.MAX_VALUE)
         );
         panPostTextLayout.setVerticalGroup(
             panPostTextLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 414, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 386, Short.MAX_VALUE)
         );
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Post attach"));
@@ -493,8 +499,6 @@ public class NBFrame extends javax.swing.JFrame {
 
         jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder("NanoPost container PNG"));
 
-        jLabel5.setText("File name:");
-
         edContainerFile.setEditable(false);
         edContainerFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -509,22 +513,34 @@ public class NBFrame extends javax.swing.JFrame {
             }
         });
 
+        btngrpContainer.add(rbRandomContainer);
+        rbRandomContainer.setSelected(true);
+        rbRandomContainer.setText("Random container .PNG from /containers/ folder");
+
+        btngrpContainer.add(rbFileContainer);
+        rbFileContainer.setText("Choose container file:");
+
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
-                .addComponent(jLabel5)
-                .addGap(0, 0, Short.MAX_VALUE))
-            .addGroup(jPanel7Layout.createSequentialGroup()
-                .addComponent(edContainerFile)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(edContainerFile, javax.swing.GroupLayout.DEFAULT_SIZE, 301, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnSelectContainerFile, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(rbFileContainer)
+                    .addComponent(rbRandomContainer, javax.swing.GroupLayout.PREFERRED_SIZE, 337, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
-                .addComponent(jLabel5)
+                .addComponent(rbRandomContainer)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(rbFileContainer)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(edContainerFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -553,13 +569,13 @@ public class NBFrame extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(panPostText, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(edParentHash)))
+                        .addComponent(edParentHash))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -569,8 +585,8 @@ public class NBFrame extends javax.swing.JFrame {
                 .addComponent(panPostText, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPanel7, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
@@ -584,8 +600,12 @@ public class NBFrame extends javax.swing.JFrame {
 
         jPanel9.setBorder(javax.swing.BorderFactory.createTitledBorder("Posts tree"));
 
+        scrollTree.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+
         javax.swing.tree.DefaultMutableTreeNode treeNode1 = new javax.swing.tree.DefaultMutableTreeNode("root");
         npTree.setModel(new javax.swing.tree.DefaultTreeModel(treeNode1));
+        npTree.setLargeModel(true);
+        npTree.setScrollsOnExpand(false);
         npTree.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
             public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
                 npTreeValueChanged(evt);
@@ -696,6 +716,10 @@ public class NBFrame extends javax.swing.JFrame {
         npTree.setExpandsSelectedPaths(true); 
         
         loadImageUrls();
+        
+        // Smooth mouse wheel scrolling
+        scrollTree.getViewport().setScrollMode(JViewport.BLIT_SCROLL_MODE);
+        scrollTree.getVerticalScrollBar().setUnitIncrement(10);
     }//GEN-LAST:event_formWindowOpened
 
     private void btnAddRuleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddRuleActionPerformed
@@ -833,30 +857,75 @@ public class NBFrame extends javax.swing.JFrame {
             np = NanoPostFactory.createNanoPost(txtPostText.getText(), parentHash, null);
         }
         
-        File containerFile = new File(edContainerFile.getText());
+        File containerFile;
+        if (rbRandomContainer.isSelected()) {
+            containerFile = this.getRandomContainerPNG();
+            
+            if (containerFile == null) {
+                JOptionPane.showMessageDialog(this, "There is no any PNG file in folder " + MainClass.CONTAINERS_DIR, "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        } else {
+            containerFile = new File(edContainerFile.getText());
+        }
+        
         if (!containerFile.exists()) {
             JOptionPane.showMessageDialog(this, "Selected container file does not exists.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
-        ImageUtils.encodeIntoImage(containerFile, np.getAsBytes(), edBoardCode.getText());
+            
+        File outputFile = null;
+        NanoPost nanoPost = null;
         
         try {
-            byte[] dataBytes = ImageUtils.tryToDecodeSteganoImage(ByteUtils.readBytesFromFile(new File(containerFile.toString() + ".nanopost.png")), edBoardCode.getText());
+            outputFile = new File(MainClass.OUTBOX_DIR + System.getProperty("file.separator") + System.currentTimeMillis() + ".png");
+            ImageUtils.encodeIntoImage(containerFile, outputFile, np.getAsBytes(), edBoardCode.getText());
+        
+            byte[] dataBytes = ImageUtils.tryToDecodeSteganoImage(ByteUtils.readBytesFromFile(outputFile), edBoardCode.getText());
 
-            NanoPost nanoPost = NanoPostFactory.getNanoPostFromBytes(dataBytes);
-            nanoPost.setSourceImageData(ByteUtils.readBytesFromFile(new File(containerFile.toString() + ".nanopost.png")));
-            nanoPost.saveToFile();
+            nanoPost = NanoPostFactory.getNanoPostFromBytes(dataBytes);
+            nanoPost.setSourceImageData(ByteUtils.readBytesFromFile(outputFile));
+            nanoPost.saveToFile(true);
+            nanoPost.clearAllBinaryData();
 
             // Trying to free memory
             nanoPost = null;
             dataBytes = null;
         } catch (MalformedNanoPostException | IOException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException ex) {
             JOptionPane.showMessageDialog(null, ex.getLocalizedMessage(), "An error occured", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            outputFile.delete();
         }
         
     }//GEN-LAST:event_jButton1ActionPerformed
 
+    public File getRandomContainerPNG() {
+        File dir = new File(MainClass.CONTAINERS_DIR);
+        
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+        
+        if (!dir.exists() || !dir.isDirectory()) {
+            return null;
+        }
+        
+        File[] files = dir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File directory, String fileName) {
+                return fileName.toLowerCase().endsWith(".png");
+            }
+        });
+        
+        Random r = new Random(System.currentTimeMillis());
+        
+        if (files.length > 0) {
+            return files[r.nextInt(files.length)];
+        }
+        
+        return null;
+    }
+    
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         ((DefaultMutableTreeNode)npTree.getModel().getRoot()).removeAllChildren();
         ((DefaultTreeModel)npTree.getModel()).reload();
@@ -993,6 +1062,7 @@ public class NBFrame extends javax.swing.JFrame {
     private javax.swing.JButton btnSelectContainerFile;
     private javax.swing.JButton btnSelectFile;
     private javax.swing.JButton btnStart;
+    private javax.swing.ButtonGroup btngrpContainer;
     private javax.swing.JTextField edAttachFile;
     private javax.swing.JTextField edBoardCode;
     private javax.swing.JTextField edContainerFile;
@@ -1005,7 +1075,6 @@ public class NBFrame extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JPanel jPanel1;
@@ -1028,6 +1097,8 @@ public class NBFrame extends javax.swing.JFrame {
     private javax.swing.JPanel panelRefresh;
     private javax.swing.JPanel panelSynch;
     private javax.swing.JProgressBar pbLocalSync;
+    private javax.swing.JRadioButton rbFileContainer;
+    private javax.swing.JRadioButton rbRandomContainer;
     private javax.swing.JScrollPane scrollTree;
     private javax.swing.JTable tableRules;
     private javax.swing.JTable tableSync;

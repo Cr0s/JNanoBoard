@@ -55,6 +55,7 @@ public class NanoPost {
     private byte[] sourceImageData;
     
     private ArrayList<NanoPost> childs = new ArrayList<>();
+    private boolean outbox = false;
     
     public NanoPost(byte[] postHash, byte[] parentHash, String postText, int postTimestamp, NanoPostAttach attachData) {
         this.postHash = postHash;
@@ -119,11 +120,11 @@ public class NanoPost {
         return null;
     }
     
-    public void saveToFile() throws IOException {
-        String nanopostsDir = MainClass.NANOPOSTS_DIR + System.getProperty("file.separator");
+    public void saveToFile(boolean outbox) throws IOException {
+        String nanopostsDir = getNanopostsDir(outbox);
         
         // Save nanopost file
-        ByteUtils.writeBytesToFile(getNanoPostFile(), this.sourceImageData);
+        ByteUtils.writeBytesToFile(getNanoPostFile(outbox), this.sourceImageData);
         
         // Save post text
         String postDate = postDateToString();
@@ -138,13 +139,29 @@ public class NanoPost {
         }
     }
     
+    public String getNanopostsDir(boolean outbox) {
+        String nanopostsDir;
+        
+        if (!outbox) { 
+            nanopostsDir = MainClass.NANOPOSTS_DIR + System.getProperty("file.separator");
+        } else {
+            nanopostsDir = MainClass.OUTBOX_DIR + System.getProperty("file.separator");
+        }
+        
+        if (!new File(nanopostsDir).exists()) {
+            new File(nanopostsDir).mkdir();
+        }   
+        
+        return nanopostsDir;
+    }
+    
     public boolean isAlreadyDownloaded() {
-        String nanopostsDir = MainClass.NANOPOSTS_DIR + System.getProperty("file.separator");
+        String nanopostsDir = getNanopostsDir(this.outbox);
         return new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + ".nanopost.png").exists();
     }
     
-    public File getNanoPostFile() {
-        String nanopostsDir = MainClass.NANOPOSTS_DIR + System.getProperty("file.separator");
+    public File getNanoPostFile(boolean outbox) {
+        String nanopostsDir = getNanopostsDir(outbox);
         return new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + ".nanopost.png");       
     }
     
@@ -301,7 +318,15 @@ public class NanoPost {
      * Sets attach data to specified NanoPostAttach object
      * @param npa attach info
      */
-    void setAttach(NanoPostAttach npa) {
+    public void setAttach(NanoPostAttach npa) {
         this.attachData = npa;
+    }
+    
+    public void setOutbox(boolean outbox) {
+        this.outbox = outbox;
+    }
+    
+    public boolean isFromOutbox() {
+        return this.outbox;
     }
 }

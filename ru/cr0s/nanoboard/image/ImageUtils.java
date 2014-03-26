@@ -82,7 +82,7 @@ public class ImageUtils {
         return tryToDecodeSteganoImage(baos.toByteArray(), key);
     }
     
-    public static void encodeIntoImage(File containerImg, byte[] srcBytes, String key) {
+    public static void encodeIntoImage(File containerImg, File outputFile, byte[] srcBytes, String key) {
         try {
             BufferedImage in = ImageIO.read(containerImg);
             BufferedImage newImage = new BufferedImage(in.getWidth(), in.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -98,10 +98,9 @@ public class ImageUtils {
                 srcS[i] = (short) (encryptedBytes[i] & 0xFF);
             }
             
-            String output = containerImg.getAbsolutePath() + ".nanopost.png";
-            ImageEncoder.writeBytesToImage(in, srcS, output, new Random(key.hashCode()));
+            ImageEncoder.writeBytesToImage(in, srcS, outputFile.toString(), new Random(key.hashCode()));
 
-            System.out.println("[OK] Steganographic .png \"" + output + "\" generated.");
+            System.out.println("[OK] Steganographic .png \"" + outputFile.toString() + "\" generated.");
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | ImageWriteException | IOException ex) {
             Logger.getLogger(ImageUtils.class.getName()).log(Level.SEVERE, null, ex);
         }    

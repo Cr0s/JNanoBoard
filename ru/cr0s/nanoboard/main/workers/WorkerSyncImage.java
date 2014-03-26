@@ -101,7 +101,8 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
                             
                             if (!np.isAlreadyDownloaded()) {
                                 publish(new SyncTaskState(rule, imageUrl, "NEW NANOPOST", this.totalProgressValue));
-                                np.saveToFile();
+                                np.setOutbox(false);
+                                np.saveToFile(false);
                             } else {
                                 publish(new SyncTaskState(rule, imageUrl, "IN SYNC", this.totalProgressValue));
                             }

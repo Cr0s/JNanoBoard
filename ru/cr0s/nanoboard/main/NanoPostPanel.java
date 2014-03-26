@@ -26,6 +26,7 @@ package cr0s.nanoboard.main;
 import cr0s.nanoboard.html.HtmlUtils;
 import cr0s.nanoboard.nanopost.NanoPost;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -36,6 +37,7 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
+import javax.swing.JEditorPane;
 import javax.swing.UIManager;
 
 /**
@@ -64,11 +66,23 @@ public class NanoPostPanel extends javax.swing.JPanel {
                 drawAttachImage();
             }
         } else {
-            drawNanopostImage();
-            //panAttach.setVisible(false);
+            //drawNanopostImage();
+            panAttach.setVisible(false);
+            
+            // Adjust JEditorPane size
+            int width = this.getPreferredSize().width;
+            this.setPreferredSize(new Dimension(width, getContentHeight(HtmlUtils.stripHtmlTags(np.getPostText())) + panPostHeader.getPreferredSize().height + 6));
         }
     }
 
+    public static int getContentHeight(String content) {
+        JEditorPane dummyEditorPane=new JEditorPane();
+        dummyEditorPane.setSize(100,Short.MAX_VALUE);
+        dummyEditorPane.setText(content);
+        
+        return dummyEditorPane.getPreferredSize().height;
+    }    
+    
     private void drawAttachImage() {
         try {
             BufferedImage image = ImageIO.read(np.getAttach().getLocalFile());
@@ -88,7 +102,7 @@ public class NanoPostPanel extends javax.swing.JPanel {
 
     private void drawNanopostImage() {
         try {
-            File imgFile = np.getNanoPostFile();
+            File imgFile = np.getNanoPostFile(np.isFromOutbox());
             if (!imgFile.exists()) {
                 panAttach.setVisible(false);
                 return;
