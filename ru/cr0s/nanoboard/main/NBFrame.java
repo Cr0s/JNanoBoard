@@ -443,7 +443,9 @@ public class NBFrame extends javax.swing.JFrame {
 
         txtPostText.setColumns(20);
         txtPostText.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        txtPostText.setLineWrap(true);
         txtPostText.setRows(5);
+        txtPostText.setWrapStyleWord(true);
         jScrollPane3.setViewportView(txtPostText);
 
         javax.swing.GroupLayout panPostTextLayout = new javax.swing.GroupLayout(panPostText);

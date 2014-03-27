@@ -126,10 +126,10 @@ public class NanoPost {
         // Save nanopost file
         ByteUtils.writeBytesToFile(getNanoPostFile(outbox), this.sourceImageData);
         
-        // Save post text
-        String postDate = postDateToString();
+        // Save post text <REMOVED>
+        /*String postDate = postDateToString();
         File npFilePost = new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + "_"  + postDate + ".txt"); 
-        ByteUtils.writeBytesToFile(npFilePost, this.postText.getBytes("UTF-8"));        
+        ByteUtils.writeBytesToFile(npFilePost, this.postText.getBytes("UTF-8"));*/
         
         // If attach file is exists
         if (this.attachData != null) {
