@@ -839,10 +839,10 @@ public class NBFrame extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         NanoPost np;
 
-        byte[] parentHash = EncryptionProvider.EMPTY_HASH;
+        byte[] parentHash = EncryptionProvider.EMPTY_HASH_SHA512;
         String parentHashStr = edParentHash.getText();
         if (!parentHashStr.trim().isEmpty()) {
-            if ((parentHashStr.length() == EncryptionProvider.HASH_SIZE_BYTES * 2) && parentHashStr.matches("[a-f0-9]+")) {
+            if ((parentHashStr.length() == EncryptionProvider.SHA_512_HASH_SIZE_BYTES * 2) && parentHashStr.matches("[a-f0-9]+")) {
                 parentHash = ByteUtils.stringToBytes(parentHashStr);
             }
         }        

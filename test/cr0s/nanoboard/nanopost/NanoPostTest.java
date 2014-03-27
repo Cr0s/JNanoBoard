@@ -53,7 +53,7 @@ public class NanoPostTest {
     public static void setUpClass() {
         np1 = NanoPostFactory.createNanoPost(np1Text, EncryptionProvider.sha512(new byte[] { 1, 2, 3, 4, 5 }), null);
         
-        opNp1 = NanoPostFactory.createNanoPost(opNp1Text, EncryptionProvider.EMPTY_HASH, null);
+        opNp1 = NanoPostFactory.createNanoPost(opNp1Text, EncryptionProvider.EMPTY_HASH_SHA512, null);
         
         opNp1Child = NanoPostFactory.createNanoPost(opNp1ChildText, ByteUtils.stringToBytes(opNp1.getPostHash()), null);
         opNp1.addChild(opNp1Child);

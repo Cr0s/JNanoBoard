@@ -52,7 +52,7 @@ public class EncryptionProvider {
     public static final String PADDING = "PKCS5Padding";
     public static final int KEY_LENGTH = 16;
     
-    public static final byte[] EMPTY_HASH = new byte[] {
+    public static final byte[] EMPTY_HASH_SHA512 = new byte[] {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -61,6 +61,13 @@ public class EncryptionProvider {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0
     };
+    
+    public static final byte[] EMPTY_HASH_SHA256 = new byte[] {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0,
+    };    
     
     /**
      * Encrypt bytes with AES by specified key
@@ -112,7 +119,7 @@ public class EncryptionProvider {
         return encVal;
     }
     
-    public static int HASH_SIZE_BYTES = 64;
+    public static int SHA_512_HASH_SIZE_BYTES = 64;
     /**
      * Returns sha512 hash of bytes array
      * @param bytes input bytes
@@ -133,4 +140,26 @@ public class EncryptionProvider {
         
         return null;
     }
+    
+    public static int SHA_256_HASH_SIZE_BYTES = 32;
+    /**
+     * Returns sha512 hash of bytes array
+     * @param bytes input bytes
+     * @return hash bytes
+     */
+    public static byte[] sha256(byte[] bytes) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(bytes);
+
+            byte byteData[] = md.digest();
+
+            return byteData;
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(EncryptionProvider.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+        }
+        
+        return null;
+    }    
 }

@@ -54,19 +54,19 @@ public class NanoPostFactory {
             int dataLength = data.length;
             DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));
 
-            if (dataLength < EncryptionProvider.HASH_SIZE_BYTES * 2) {
+            if (dataLength < EncryptionProvider.SHA_512_HASH_SIZE_BYTES * 2) {
                 throw new MalformedNanoPostException("Post data is too small");
             }
 
             // 2. Get post hash
-            byte[] postHash = new byte[EncryptionProvider.HASH_SIZE_BYTES]; // SHA-512
+            byte[] postHash = new byte[EncryptionProvider.SHA_512_HASH_SIZE_BYTES]; // SHA-512
             dis.readFully(postHash);
 
             // 3. Get hash of data and compare
             byte[] dataHashToCheck; // SHA-512
 
             // Whole nanopost data to check (including parent hash)
-            byte[] npData = new byte[dataLength - EncryptionProvider.HASH_SIZE_BYTES];
+            byte[] npData = new byte[dataLength - EncryptionProvider.SHA_512_HASH_SIZE_BYTES];
             dis.readFully(npData);
 
 
@@ -83,13 +83,13 @@ public class NanoPostFactory {
             dis = new DataInputStream(new ByteArrayInputStream(npData));
 
             // 4. Get parent hash
-            byte[] parentHash = new byte[EncryptionProvider.HASH_SIZE_BYTES];
-            dis.readFully(parentHash, 0, EncryptionProvider.HASH_SIZE_BYTES);
+            byte[] parentHash = new byte[EncryptionProvider.SHA_512_HASH_SIZE_BYTES];
+            dis.readFully(parentHash, 0, EncryptionProvider.SHA_512_HASH_SIZE_BYTES);
 
             //System.out.println("[H] Post hash   : " + ByteUtils.bytesToHexString(postHash) + " | Parent hash: " + ByteUtils.bytesToHexString(parentHash));
 
             // 5. Read post data
-            byte[] postData = new byte[dataLength - (2 * EncryptionProvider.HASH_SIZE_BYTES)];
+            byte[] postData = new byte[dataLength - (2 * EncryptionProvider.SHA_512_HASH_SIZE_BYTES)];
             dis.readFully(postData);
             dis = new DataInputStream(new ByteArrayInputStream(postData));
 

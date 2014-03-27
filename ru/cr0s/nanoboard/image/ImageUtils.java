@@ -58,7 +58,7 @@ public class ImageUtils {
             short[] s = ImageEncoder.readBytesFromImage(img, new Random(key.hashCode()));
             
             // Data inside image is too small, reject image
-            if (s.length < EncryptionProvider.HASH_SIZE_BYTES * 2) {
+            if (s.length < EncryptionProvider.SHA_512_HASH_SIZE_BYTES * 2) {
                 return null;
             }
             

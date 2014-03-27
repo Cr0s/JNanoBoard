@@ -78,7 +78,7 @@ public class NanoPost {
     }
     
     public boolean isOpPost() {
-        return Arrays.equals(this.parentHash, EncryptionProvider.EMPTY_HASH);
+        return Arrays.equals(this.parentHash, EncryptionProvider.EMPTY_HASH_SHA512);
     }
     
     public NanoPostAttach getAttach() {

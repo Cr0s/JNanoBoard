@@ -106,13 +106,13 @@ public class EncryptionProviderTest {
     }    
     
     /**
-     * Test of sha512 method. Hash length must be equals HASH_SIZE_BYTES.
+     * Test of sha512 method. Hash length must be equals SHA_512_HASH_SIZE_BYTES.
      */
     @Test
     public void testSha512Hashlength() throws UnsupportedEncodingException {
         byte[] bytes = "fooBarBAZ".getBytes("UTF-8");
         
-        int expResult = EncryptionProvider.HASH_SIZE_BYTES;
+        int expResult = EncryptionProvider.SHA_512_HASH_SIZE_BYTES;
         
         byte[] hashBytes = EncryptionProvider.sha512(bytes);
         assertEquals(expResult, hashBytes.length);
@@ -142,6 +142,48 @@ public class EncryptionProviderTest {
         
         byte[] hashBytes1 = EncryptionProvider.sha512(bytes1);
         byte[] hashBytes2 = EncryptionProvider.sha512(bytes2);
+        
+        // must be inequal
+        assertFalse(Arrays.equals(hashBytes1, hashBytes2));
+    }    
+
+    /**
+     * Test of sha256 method. Hash length must be equals SHA_256_HASH_SIZE_BYTES.
+     */
+    @Test
+    public void testSha256Hashlength() throws UnsupportedEncodingException {
+        byte[] bytes = "fooBarBAZ".getBytes("UTF-8");
+        
+        int expResult = EncryptionProvider.SHA_256_HASH_SIZE_BYTES;
+        
+        byte[] hashBytes = EncryptionProvider.sha256(bytes);
+        assertEquals(expResult, hashBytes.length);
+    }
+    
+    /**
+     * Test of sha256 method, of class EncryptionProvider.
+     * Tests equality condition. Two hashesh of same argument must be equals
+     */
+    @Test
+    public void testSha256Equality() throws UnsupportedEncodingException {
+        byte[] bytes = "fooBarBAZ".getBytes("UTF-8");
+        
+        byte[] hashBytes1 = EncryptionProvider.sha256(bytes);
+        byte[] hashBytes2 = EncryptionProvider.sha256(bytes);
+        assertArrayEquals(hashBytes1, hashBytes2);
+    }    
+    
+    /**
+     * Test of sha256 method, of class EncryptionProvider.
+     * Two hashes of different argument must be inequal
+     */
+    @Test
+    public void testSha256Inequality() throws UnsupportedEncodingException {
+        byte[] bytes1 = "fooBarBAZ".getBytes("UTF-8");
+        byte[] bytes2 = "fooBarBAY".getBytes("UTF-8");
+        
+        byte[] hashBytes1 = EncryptionProvider.sha256(bytes1);
+        byte[] hashBytes2 = EncryptionProvider.sha256(bytes2);
         
         // must be inequal
         assertFalse(Arrays.equals(hashBytes1, hashBytes2));
