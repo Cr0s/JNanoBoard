@@ -58,7 +58,7 @@ public class NanoPostPanel extends javax.swing.JPanel {
 
         initComponents();
 
-        this.panPostText.setText(HtmlUtils.stripHtmlTags(np.getPostText()).replaceAll("\n", "<br>"));
+        this.panPostText.setText(HtmlUtils.markdownToHtml(HtmlUtils.stripHtmlTags(np.getPostText())).replaceAll("\n", "<br>"));
         this.lblPostHeader.setText(np.toString());
 
         if (np.getAttach() != null) {

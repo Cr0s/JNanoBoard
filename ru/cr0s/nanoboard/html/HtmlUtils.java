@@ -23,31 +23,76 @@
  */
 package cr0s.nanoboard.html;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Collection of HTML utilities
+ *
  * @author Cr0s
  */
 public class HtmlUtils {
-    public static String stripHtmlTags(String html) {
-        return html.replaceAll("\\<", "&lt;").replaceAll("\\>", "&gt;");
-    }
+
+    private final static String boldRegexp = "\\*\\*(.+?)\\*\\*";
+    private final static String italicRegexp = "\\*(.+?)\\*";
+    private final static String quoteRegexp = "^(\\&gt\\;.+?)$";
     
+    private static Pattern boldPattern, italicPattern, quotePattern;
+    
+    static {
+        boldPattern = Pattern.compile(boldRegexp);
+        italicPattern = Pattern.compile(italicRegexp);
+        quotePattern = Pattern.compile(quoteRegexp, Pattern.MULTILINE);
+    };
+
+    public static String stripHtmlTags(String html) {
+        return html.replaceAll("<br>", "\n").replaceAll("\\<", "&lt;").replaceAll("\\>", "&gt;");
+    }
+
     /**
      * Replaces markdown characters to html code
+     *
      * @param text input tet
      * @return html code
-     * 
+     *
      * TODO: make this work via Pattern/Matcher
      */
     public static String markdownToHtml(String text) {
-        String res = "";
+        String result = "";
         
+        result = replaceWakabamark(text);
         
-        res = res.replaceAll("[b]", "<b>");
-        res = res.replaceAll("[i]", "<i>");
+        return result;
+    }
+    
+    private static String replaceWakabamark(String text) {
+        String result = "";
+
+        // Bold
+        Matcher matcher = boldPattern.matcher(text);
+        result = matcher.replaceAll(getReplacement("bold"));
         
-        res = res.replaceAll("(\\>.*)\n|$", "<font color=\"green\">\1</font>");
+        // Italic
+        matcher = italicPattern.matcher(result);
+        result = matcher.replaceAll(getReplacement("italic"));
         
-        return res;
-    } 
+        // Quotes
+        matcher = quotePattern.matcher(result);
+        result = matcher.replaceAll(getReplacement("quote"));
+        
+        return result;    
+    }
+    
+    // TODO: use HashMap
+    private static String getReplacement(String type) {
+        if (type.equals("bold")) {
+            return "<strong>$1</strong>";
+        } else if (type.equals("italic")) {
+            return "<em>$1</em>";
+        } else if (type.equals("quote")) {
+            return "<font color=\"green\">$1</font>\n";
+        }
+        
+        return "";
+    }
 }
