@@ -85,12 +85,13 @@ public class HtmlUtils {
     
     // TODO: use HashMap
     private static String getReplacement(String type) {
-        if (type.equals("bold")) {
-            return "<strong>$1</strong>";
-        } else if (type.equals("italic")) {
-            return "<em>$1</em>";
-        } else if (type.equals("quote")) {
-            return "<font color=\"green\">$1</font>\n";
+        switch (type) {
+            case "bold":
+                return "<strong>$1</strong>";
+            case "italic":
+                return "<em>$1</em>";
+            case "quote":
+                return "<font color=\"green\">$1</font>\n";
         }
         
         return "";

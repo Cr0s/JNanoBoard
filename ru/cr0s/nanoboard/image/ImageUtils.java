@@ -23,6 +23,7 @@
  */
 package cr0s.nanoboard.image;
 
+import cr0s.nanoboard.stegano.CompressionProvider;
 import cr0s.nanoboard.stegano.EncryptionProvider;
 import cr0s.nanoboard.util.ByteUtils;
 import java.awt.Graphics2D;
@@ -37,6 +38,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.DataFormatException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -56,32 +58,36 @@ public class ImageUtils {
 
             // 2. Try to read stegano data
             short[] s = ImageEncoder.readBytesFromImage(img, new Random(key.hashCode()));
-            
+
             // Data inside image is too small, reject image
-            if (s.length < EncryptionProvider.SHA_512_HASH_SIZE_BYTES * 2) {
+            if (s.length < EncryptionProvider.SHA_256_HASH_SIZE_BYTES * 2) {
                 return null;
             }
-            
+
             byte[] b = new byte[s.length];
             for (int i = 0; i < b.length; i++) {
                 b[i] = (byte) (s[i] & 0xFF);
             }
 
+            // 3. Try to decrypt bytes
             byte[] decryptedBytes = null;
             decryptedBytes = EncryptionProvider.decryptBytes(b, key.getBytes());
-            
+
+            // 4. Try to decompress bytes
+            decryptedBytes = CompressionProvider.decompressBytes(decryptedBytes);
+
             return decryptedBytes;
-        } catch (IOException ex) {
-            Logger.getLogger(ImageUtils.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (DataFormatException | IOException ex) {
+            //Logger.getLogger(ImageUtils.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         return null;
     }
-    
-    public static byte[] tryToDecodeSteganoImage(ByteArrayOutputStream baos, String key)  throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+
+    public static byte[] tryToDecodeSteganoImage(ByteArrayOutputStream baos, String key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
         return tryToDecodeSteganoImage(baos.toByteArray(), key);
     }
-    
+
     public static void encodeIntoImage(File containerImg, File outputFile, byte[] srcBytes, String key) {
         try {
             BufferedImage in = ImageIO.read(containerImg);
@@ -90,6 +96,8 @@ public class ImageUtils {
             g.drawImage(in, 0, 0, null);
             g.dispose();
 
+            srcBytes = CompressionProvider.compressBytes(srcBytes);
+
             byte[] encryptedBytes = EncryptionProvider.encryptBytes(srcBytes, key.getBytes());
 
             // Trick: convert from unsigned number to signed byte
@@ -97,12 +105,43 @@ public class ImageUtils {
             for (int i = 0; i < encryptedBytes.length; i++) {
                 srcS[i] = (short) (encryptedBytes[i] & 0xFF);
             }
-            
+
             ImageEncoder.writeBytesToImage(in, srcS, outputFile.toString(), new Random(key.hashCode()));
 
             System.out.println("[OK] Steganographic .png \"" + outputFile.toString() + "\" generated.");
+        } catch (DataFormatException ex) {
+            Logger.getLogger(ImageUtils.class.getName()).log(Level.SEVERE, null, ex);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | ImageWriteException | IOException ex) {
             Logger.getLogger(ImageUtils.class.getName()).log(Level.SEVERE, null, ex);
-        }    
-    }        
+        }
+    }
+
+    public static int calculatePossibleDataSpace(File containerImg, String key) throws IOException {
+        BufferedImage in = ImageIO.read(containerImg);
+        BufferedImage newImage = new BufferedImage(in.getWidth(), in.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = newImage.createGraphics();
+        g.drawImage(in, 0, 0, null);
+        g.dispose();
+            
+        return calculatePossibleDataSpace(in, key);
+    }
+    
+    public static int calculatePossibleDataSpace(BufferedImage bi, String key) {
+        int h = bi.getHeight();
+        int w = bi.getWidth();
+
+        int result = 0;
+
+        Random r = new Random(key.hashCode());
+
+        for (int row = 0; row < h; row++) {
+            for (int col = 4; col < w; col++) {
+                if (r.nextBoolean()) {
+                    result++;
+                }
+            }
+        }
+
+        return result;        
+    }
 }

@@ -26,9 +26,9 @@ package cr0s.nanoboard.nanopost;
 import cr0s.nanoboard.stegano.EncryptionProvider;
 import cr0s.nanoboard.util.ByteUtils;
 import org.junit.AfterClass;
+import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Unit tests for NanoPost class
@@ -42,7 +42,7 @@ public class NanoPostTest {
     private static NanoPost opNp1;
     private static NanoPost opNp1Child;
     
-    private static final String np1Text = "NanoPost #1 test.";
+    private static final String np1Text = "NanoPost #1 test. \" testing ' / \\ \\n \" escape { } ( ) [ ] characters";
     private static final String opNp1Text = "OP-post #1 test.";
     private static final String opNp1ChildText = "Child of opNp1 test NanoPost.";
     private static final String np2WithAttachText = "NanoPost #2 test with attach";
@@ -51,15 +51,15 @@ public class NanoPostTest {
     
     @BeforeClass
     public static void setUpClass() {
-        np1 = NanoPostFactory.createNanoPost(np1Text, EncryptionProvider.sha512(new byte[] { 1, 2, 3, 4, 5 }), null);
+        np1 = NanoPostFactory.createNanoPost(np1Text, EncryptionProvider.sha256(new byte[] { 1, 2, 3, 4, 5 }), null);
         
-        opNp1 = NanoPostFactory.createNanoPost(opNp1Text, EncryptionProvider.EMPTY_HASH_SHA512, null);
+        opNp1 = NanoPostFactory.createNanoPost(opNp1Text, EncryptionProvider.EMPTY_HASH_SHA256, null);
         
         opNp1Child = NanoPostFactory.createNanoPost(opNp1ChildText, ByteUtils.stringToBytes(opNp1.getPostHash()), null);
         opNp1.addChild(opNp1Child);
         
         NanoPostAttach npa = new NanoPostAttach(new byte[] { 1, 2, 3, 4, 5, 6 }, "testfile", null);
-        np2WithAttach = NanoPostFactory.createNanoPost(np2WithAttachText, EncryptionProvider.sha512(new byte[] { 1, 2, 3, 4, 5 }), null);
+        np2WithAttach = NanoPostFactory.createNanoPost(np2WithAttachText, EncryptionProvider.sha256(new byte[] { 1, 2, 3, 4, 5 }), null);
         np2WithAttach.setAttach(npa);
     }
     
@@ -78,10 +78,7 @@ public class NanoPostTest {
      */
     @Test
     public void testGetPostHash() {
-        assertEquals(np1Text, np1.getPostText());
-        assertEquals(opNp1Text, opNp1.getPostText());
-        assertEquals(opNp1ChildText, opNp1Child.getPostText());
-        assertEquals(np2WithAttachText, np2WithAttach.getPostText());
+
     }
 
     /**
@@ -97,6 +94,10 @@ public class NanoPostTest {
      */
     @Test
     public void testGetPostText() {
+        assertEquals(np1Text, np1.getPostText());
+        assertEquals(opNp1Text, opNp1.getPostText());
+        assertEquals(opNp1ChildText, opNp1Child.getPostText());
+        assertEquals(np2WithAttachText, np2WithAttach.getPostText());        
     }
 
     /**

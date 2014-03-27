@@ -64,6 +64,8 @@ public class NanoPostPanel extends javax.swing.JPanel {
         if (np.getAttach() != null) {
             if (np.getAttach().isImage()) {
                 drawAttachImage();
+            } else {
+                panAttach.setVisible(false);
             }
         } else {
             //drawNanopostImage();

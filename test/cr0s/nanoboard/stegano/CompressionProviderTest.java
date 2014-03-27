@@ -21,20 +21,20 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
  */
-package cr0s.nanoboard.html;
+package cr0s.nanoboard.stegano;
 
 import org.junit.AfterClass;
-import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
- * Unit tests for HTML and makrdown class
- * @author Cr0s
+ * Unit tests for CompressionProvider class
+ * @author user
  */
-public class HtmlUtilsTest {
+public class CompressionProviderTest {
     
-    public HtmlUtilsTest() {
+    public CompressionProviderTest() {
     }
     
     @BeforeClass
@@ -46,25 +46,15 @@ public class HtmlUtilsTest {
     }
 
     /**
-     * Test of stripHtmlTags method, of class HtmlUtils.
+     * Test of compressBytes method, of class CompressionProvider.
      */
     @Test
-    public void testStripHtmlTags() {
-        assertEquals(HtmlUtils.stripHtmlTags("<b>test text<br>>test lines<</b>"), "&lt;b&gt;test text\n&gt;test lines&lt;&lt;/b&gt;");
-    }
-
-    /**
-     * Test of markdownToHtml method, of class HtmlUtils.
-     */
-    @Test
-    public void testMarkdownToHtml() {
-        assertEquals("<em>italic</em>", HtmlUtils.markdownToHtml("*italic*"));
+    public void testCompressAndDecompress() throws Exception {
+        byte[] sourceBytes = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 9, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0 };
         
-        assertEquals("<strong>bold</strong>", HtmlUtils.markdownToHtml("**bold**"));
+        byte[] compressedBytes = CompressionProvider.compressBytes(sourceBytes);
+        byte[] decompressedBytes = CompressionProvider.decompressBytes(compressedBytes);
         
-        assertEquals("<em>italic</em> <strong>bold</strong>", HtmlUtils.markdownToHtml("*italic* **bold**"));
-        
-        assertEquals("<font color=\"green\">&gt;quote text</font>\n", HtmlUtils.markdownToHtml(HtmlUtils.stripHtmlTags(">quote text")));
-        assertEquals("<font color=\"green\">&gt;quote text</font>\n\n<font color=\"green\">&gt;multiline quote text</font>\n", HtmlUtils.markdownToHtml(HtmlUtils.stripHtmlTags(">quote text\n>multiline quote text")));
+        assertArrayEquals(sourceBytes, decompressedBytes);
     }
 }

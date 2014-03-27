@@ -23,6 +23,7 @@
  */
 package cr0s.nanoboard.nanopost;
 
+import com.google.gson.Gson;
 import cr0s.nanoboard.main.MainClass;
 import cr0s.nanoboard.stegano.EncryptionProvider;
 import cr0s.nanoboard.util.ByteUtils;
@@ -34,6 +35,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.text.StringCharacterIterator;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,30 +50,30 @@ import java.util.logging.Logger;
  */
 public class NanoPostFactory {
 
-    public static NanoPost getNanoPostFromBytes(byte[] data) throws MalformedNanoPostException {
+    public static NanoPost getNanoPostFromBytes(byte[] data, boolean inbox) throws MalformedNanoPostException {
         try {
             // 1. Determine data size
             int dataLength = data.length;
             DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));
 
-            if (dataLength < EncryptionProvider.SHA_512_HASH_SIZE_BYTES * 2) {
+            if (dataLength < EncryptionProvider.SHA_256_HASH_SIZE_BYTES * 2) {
                 throw new MalformedNanoPostException("Post data is too small");
             }
 
             // 2. Get post hash
-            byte[] postHash = new byte[EncryptionProvider.SHA_512_HASH_SIZE_BYTES]; // SHA-512
+            byte[] postHash = new byte[EncryptionProvider.SHA_256_HASH_SIZE_BYTES]; // SHA-256
             dis.readFully(postHash);
 
             // 3. Get hash of data and compare
-            byte[] dataHashToCheck; // SHA-512
+            byte[] dataHashToCheck; // SHA-256
 
             // Whole nanopost data to check (including parent hash)
-            byte[] npData = new byte[dataLength - EncryptionProvider.SHA_512_HASH_SIZE_BYTES];
+            byte[] npData = new byte[dataLength - EncryptionProvider.SHA_256_HASH_SIZE_BYTES];
             dis.readFully(npData);
 
 
-            dataHashToCheck = EncryptionProvider.sha512(npData);
-            
+            dataHashToCheck = EncryptionProvider.sha256(npData);
+
             boolean result = Arrays.equals(postHash, dataHashToCheck);
             if (!result) {
                 System.err.println("[H] Hash from header: " + ByteUtils.bytesToHexString(postHash));
@@ -83,51 +85,43 @@ public class NanoPostFactory {
             dis = new DataInputStream(new ByteArrayInputStream(npData));
 
             // 4. Get parent hash
-            byte[] parentHash = new byte[EncryptionProvider.SHA_512_HASH_SIZE_BYTES];
-            dis.readFully(parentHash, 0, EncryptionProvider.SHA_512_HASH_SIZE_BYTES);
+            byte[] parentHash = new byte[EncryptionProvider.SHA_256_HASH_SIZE_BYTES];
+            dis.readFully(parentHash, 0, EncryptionProvider.SHA_256_HASH_SIZE_BYTES);
 
             //System.out.println("[H] Post hash   : " + ByteUtils.bytesToHexString(postHash) + " | Parent hash: " + ByteUtils.bytesToHexString(parentHash));
 
             // 5. Read post data
-            byte[] postData = new byte[dataLength - (2 * EncryptionProvider.SHA_512_HASH_SIZE_BYTES)];
+            byte[] postData = new byte[dataLength - (2 * EncryptionProvider.SHA_256_HASH_SIZE_BYTES)];
             dis.readFully(postData);
             dis = new DataInputStream(new ByteArrayInputStream(postData));
 
-            // 6. Read post text
-            String postText = dis.readUTF();
+            // 6. Read post JSON data
+            String postJson = dis.readUTF();
 
-            //System.out.println("[H] Post text : " + postText);
-            
+            System.out.println("[H] Post JSON : " + postJson);
+
             // 7. Read post attach data
             String attachFileName = dis.readUTF();
-            
+
             NanoPostAttach att = null;
-            
+
             if (!attachFileName.isEmpty()) {
                 int attachSize = dis.readInt();
                 if (attachSize <= 0) {
                     throw new MalformedNanoPostException("Attach size is less or equals ZERO.");
                 }
-                
+
                 byte[] attachData = new byte[attachSize];
                 dis.read(attachData);
-                
-                att = new NanoPostAttach(attachData, attachFileName, new File(MainClass.NANOPOSTS_DIR + System.getProperty("file.separator") + ByteUtils.bytesToHexString(postHash) + "_" + attachFileName));
-            }
 
-            int postTimestamp = 0;
-            
-            try {
-                postTimestamp = dis.readInt();
-
-                if (postTimestamp < 0) {
-                    throw new MalformedNanoPostException("Invalid post timestamp!");
+                if (!inbox) {
+                    att = new NanoPostAttach(attachData, attachFileName, new File(MainClass.NANOPOSTS_DIR + System.getProperty("file.separator") + ByteUtils.bytesToHexString(postHash) + "_" + attachFileName));
+                } else {
+                    att = new NanoPostAttach(attachData, attachFileName, new File(MainClass.OUTBOX_DIR + System.getProperty("file.separator") + ByteUtils.bytesToHexString(postHash) + "_" + attachFileName));
                 }
-            } catch (IOException e) {
-                System.err.println("[H] Can't retrieve timestamp. This is old nanopost format?");
             }
-            
-            NanoPost np = new NanoPost(postHash, parentHash, postText, postTimestamp, att);
+
+            NanoPost np = new NanoPost(postHash, parentHash, postJson, att);
 
             return np;
         } catch (IOException ex) {
@@ -136,31 +130,63 @@ public class NanoPostFactory {
     }
 
     public static NanoPost createNanoPost(String postText, byte[] parentHash, File postAttach) {
+        //postText = escapeJson(postText);
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
-        
+
         NanoPostAttach att = null;
+        String postJson = "{}";
+
         try {
             dos.write(parentHash);
-            dos.writeUTF(postText);
-            
+            postJson = new Gson().toJson(new NanoPostInfo(postText, (int) (System.currentTimeMillis() / 1000)));
+            dos.writeUTF(postJson);
+
             if (postAttach == null) {
                 dos.writeUTF(""); // there is no attached file
             } else {
                 att = new NanoPostAttach(ByteUtils.readBytesFromFile(postAttach), postAttach.getName(), postAttach);
                 att.writeToStream(dos);
             }
-            
-            dos.writeInt((int)(System.currentTimeMillis() / 1000));
+
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(NanoPostFactory.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(NanoPostFactory.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        
-        byte[] postHash = EncryptionProvider.sha512(baos.toByteArray());
+        byte[] postHash = EncryptionProvider.sha256(baos.toByteArray());
 
-        return new NanoPost(postHash, parentHash, postText, (int)(System.currentTimeMillis() / 1000), att);
+        return new NanoPost(postHash, parentHash, postJson, att);
     }
+
+    // GSON doing it automatically
+    /**
+     * Escapes special characters in post text to prevent JSON invalidation
+     *
+     * @param aText
+     * @return
+     */
+    /*public static String escapeJson(String aText) {
+        final StringBuilder result = new StringBuilder();
+        StringCharacterIterator iterator = new StringCharacterIterator(aText);
+        char character = iterator.current();
+
+        while (character != StringCharacterIterator.DONE) {
+            if (character == '\"') {
+                result.append("\\\"");
+            } else if (character == '\\') {
+                result.append("\\\\");
+            } else if (character == '/') {
+                result.append("\\/");
+            } else {
+                //the char is not a special one
+                //add it to the result as is
+                result.append(character);
+            }
+            character = iterator.next();
+        }
+        return result.toString();
+    }*/
 }

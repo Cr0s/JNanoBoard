@@ -99,7 +99,7 @@ public class WorkerLocalSync extends SwingWorker<Void, SyncTaskState> {
                 byte[] dataBytes = ImageUtils.tryToDecodeSteganoImage(ByteUtils.readBytesFromFile(f), boardCode);
 
                 try {
-                    NanoPost nanoPost = NanoPostFactory.getNanoPostFromBytes(dataBytes);
+                    NanoPost nanoPost = NanoPostFactory.getNanoPostFromBytes(dataBytes, false);
                     nanoPost.setSourceImageData(ByteUtils.readBytesFromFile(f));
                     nanoPost.setOutbox(false);
                     
@@ -120,7 +120,7 @@ public class WorkerLocalSync extends SwingWorker<Void, SyncTaskState> {
                 byte[] dataBytes = ImageUtils.tryToDecodeSteganoImage(ByteUtils.readBytesFromFile(f), boardCode);
 
                 try {
-                    NanoPost nanoPost = NanoPostFactory.getNanoPostFromBytes(dataBytes);
+                    NanoPost nanoPost = NanoPostFactory.getNanoPostFromBytes(dataBytes, true);
                     nanoPost.setSourceImageData(ByteUtils.readBytesFromFile(f));
                     nanoPost.setOutbox(true);
                     

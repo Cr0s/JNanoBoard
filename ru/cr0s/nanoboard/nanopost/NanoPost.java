@@ -23,6 +23,7 @@
  */
 package cr0s.nanoboard.nanopost;
 
+import com.google.gson.Gson;
 import cr0s.nanoboard.main.MainClass;
 import cr0s.nanoboard.stegano.EncryptionProvider;
 import cr0s.nanoboard.util.ByteUtils;
@@ -47,22 +48,20 @@ import java.util.logging.Logger;
 public class NanoPost {
     private byte[] postHash;
     private byte[] parentHash;
-    private int postTimestamp;
     
-    private String postText;
+    private NanoPostInfo postInfo;
     private NanoPostAttach attachData;
     
-    private byte[] sourceImageData;
+    private transient byte[] sourceImageData;
     
-    private ArrayList<NanoPost> childs = new ArrayList<>();
-    private boolean outbox = false;
+    private transient ArrayList<NanoPost> childs = new ArrayList<>();
+    private transient boolean outbox = false;
     
-    public NanoPost(byte[] postHash, byte[] parentHash, String postText, int postTimestamp, NanoPostAttach attachData) {
+    public NanoPost(byte[] postHash, byte[] parentHash, String postInfoJson, NanoPostAttach attachData) {
         this.postHash = postHash;
         this.parentHash = parentHash;
-        this.postText = postText;
+        this.postInfo = new Gson().fromJson(postInfoJson, NanoPostInfo.class);
         this.attachData = attachData;
-        this.postTimestamp = postTimestamp;
     }
     
     public String getPostHash() {
@@ -74,11 +73,11 @@ public class NanoPost {
     }
     
     public String getPostText() {
-        return this.postText;
+        return this.postInfo.postText;
     }
     
     public boolean isOpPost() {
-        return Arrays.equals(this.parentHash, EncryptionProvider.EMPTY_HASH_SHA512);
+        return Arrays.equals(this.parentHash, EncryptionProvider.EMPTY_HASH_SHA256);
     }
     
     public NanoPostAttach getAttach() {
@@ -102,15 +101,13 @@ public class NanoPost {
             dos.write(postHash);
             dos.write(parentHash);
             
-            dos.writeUTF(postText);
+            dos.writeUTF(new Gson().toJson(this.postInfo));
             
             if (this.attachData == null) {
                 dos.writeUTF(""); // There is no attachment
             } else {
                 this.attachData.writeToStream(dos);
             }
-            
-            dos.writeInt(this.postTimestamp);
             
             return baos.toByteArray();
         } catch (IOException ex) {
@@ -125,11 +122,6 @@ public class NanoPost {
         
         // Save nanopost file
         ByteUtils.writeBytesToFile(getNanoPostFile(outbox), this.sourceImageData);
-        
-        // Save post text <REMOVED>
-        /*String postDate = postDateToString();
-        File npFilePost = new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + "_"  + postDate + ".txt"); 
-        ByteUtils.writeBytesToFile(npFilePost, this.postText.getBytes("UTF-8"));*/
         
         // If attach file is exists
         if (this.attachData != null) {
@@ -156,8 +148,8 @@ public class NanoPost {
     }
     
     public boolean isAlreadyDownloaded() {
-        String nanopostsDir = getNanopostsDir(this.outbox);
-        return new File(nanopostsDir + ByteUtils.bytesToHexString(postHash) + ".nanopost.png").exists();
+        return (new File(getNanopostsDir(true) + ByteUtils.bytesToHexString(postHash) + ".nanopost.png").exists() 
+                || new File(getNanopostsDir(false) + ByteUtils.bytesToHexString(postHash) + ".nanopost.png").exists()); 
     }
     
     public File getNanoPostFile(boolean outbox) {
@@ -170,11 +162,11 @@ public class NanoPost {
     }
     
     public int getPostTimestamp() {
-        return this.postTimestamp;
+        return this.postInfo.postTimestamp;
     }
     
     public String postDateToString() {
-        return (new SimpleDateFormat("yyyy-MM-dd HH-mm-ss")).format(new Date(this.postTimestamp * 1000L));    
+        return (new SimpleDateFormat("yyyy-MM-dd HH-mm-ss")).format(new Date(this.postInfo.postTimestamp * 1000L));    
     }
     
     public void addChild(NanoPost np) {
@@ -187,6 +179,10 @@ public class NanoPost {
     
     public boolean isParentOf(NanoPost np) {
         return /*!np.isOpPost() &&*/ Arrays.equals(this.postHash, np.parentHash);
+    }
+    
+    public NanoPostInfo getPostInfo() {
+        return this.postInfo;
     }
     
     @Override

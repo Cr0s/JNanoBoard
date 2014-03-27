@@ -96,7 +96,7 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
 
                     if (imageSteganoBytes != null) {
                         try {
-                            NanoPost np = NanoPostFactory.getNanoPostFromBytes(imageSteganoBytes);
+                            NanoPost np = NanoPostFactory.getNanoPostFromBytes(imageSteganoBytes, false);
                             np.setSourceImageData(imageBytes);
                             
                             if (!np.isAlreadyDownloaded()) {
