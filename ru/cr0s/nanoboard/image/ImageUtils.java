@@ -25,7 +25,6 @@ package cr0s.nanoboard.image;
 
 import cr0s.nanoboard.stegano.CompressionProvider;
 import cr0s.nanoboard.stegano.EncryptionProvider;
-import cr0s.nanoboard.util.ByteUtils;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
