@@ -98,7 +98,7 @@ public class NanoPostFactory {
             // 6. Read post JSON data
             String postJson = dis.readUTF();
 
-            System.out.println("[H] Post JSON : " + postJson);
+            //System.out.println("[H] Post JSON : " + postJson);
 
             // 7. Read post attach data
             String attachFileName = dis.readUTF();
