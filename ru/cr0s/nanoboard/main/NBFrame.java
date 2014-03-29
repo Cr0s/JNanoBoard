@@ -1055,7 +1055,6 @@ public class NBFrame extends javax.swing.JFrame {
         }
 
         for (Rule r : RulesManager.getInstance().getRulesList()) {
-            System.out.println(r.getRuleName());
             model.addRow(new Object[]{(Boolean) r.isIsEnabled(), (String) r.getRuleName(), (String) r.getRuleURL(), (String) r.getRuleRegExpr()});
         }
     }
