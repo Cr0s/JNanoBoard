@@ -24,6 +24,8 @@
 package cr0s.nanoboard.main;
 
 import cr0s.nanoboard.rules.RulesManager;
+import cr0s.nanoboard.stegano.EncryptionProvider;
+import cr0s.nanoboard.util.Base64;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -51,7 +53,8 @@ public class MainClass {
     public static Properties config;
     public static void main(String[] args) {
         try {
-            System.out.println("[ JNanoBoard version: " + VERSION + "]");
+
+                System.out.println("[ JNanoBoard version: " + VERSION + "]");
             
             RulesManager.getInstance().loadRules(RULES_DIR);      
 
@@ -66,6 +69,7 @@ public class MainClass {
             setLookAndFeel();
             mainFrame = new NBFrame();
             mainFrame.setVisible(true);
+            
         } catch (Exception ex) {
             Logger.getLogger(MainClass.class.getName()).log(Level.SEVERE, null, ex);
         }

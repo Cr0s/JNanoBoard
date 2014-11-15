@@ -68,15 +68,16 @@ public class WorkerExecuteRule extends SwingWorker<Void, RuleTaskState> {
 
         RuleDrivenTextParser rdtp = new RuleDrivenTextParser(rule);
 
-        ArrayList<String> resultList = rdtp.parseTextByRule(htmlPage);
-        if (resultList.size() > 0) {
-            for (String s : resultList) {
-                try {
-                    publish(new RuleTaskState(-1, "http://" + (new URL(rule.getRuleURL())).getHost() + s));
-                } catch (MalformedURLException ex) {
-                    Logger.getLogger(WorkerExecuteRule.class.getName()).log(Level.SEVERE, null, ex);
+        try {
+            URL url = new URL(rule.getRuleURL());
+            ArrayList<String> resultList = rdtp.parseTextByRule(htmlPage);
+            if (resultList.size() > 0) {
+                for (String s : resultList) {
+                    publish(new RuleTaskState(-1, url.getProtocol() + "://" + url.getHost() + s));
                 }
             }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
         }
 
         return null;

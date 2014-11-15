@@ -60,7 +60,7 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
         this.tableRowIndex = tableRowIndex;
     }
 
-    @Override
+@Override
     protected Void doInBackground() {
         final int BUFFER_SIZE = 1024;
 
@@ -71,7 +71,7 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
             URL url = new URL(imageUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestProperty("User-Agent", "User-Agent: Mozilla/5.0 (Windows NT 6.1; rv:27.0) Gecko/20100101 Firefox/27.0");
-            
+
             this.totalProgressValue = connection.getContentLength();
 
             int totalDataRead = 0;
@@ -84,7 +84,6 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
                 while ((i = bis.read(data)) != -1) {
                     totalDataRead = totalDataRead + i;
                     baos.write(data, 0, i);
-
                     publish(new SyncTaskState(rule, imageUrl, "Downloading", totalDataRead));
                 }
 
@@ -123,6 +122,8 @@ public class WorkerSyncImage extends SwingWorker<Void, SyncTaskState> {
                 }
             }
         } catch (IOException ex) {
+            ex.printStackTrace();
+            
             publish(new SyncTaskState(rule, imageUrl, "IO Error", 0));
         } finally {
             try {

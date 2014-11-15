@@ -25,6 +25,7 @@ package cr0s.nanoboard.image;
 
 import cr0s.nanoboard.stegano.CompressionProvider;
 import cr0s.nanoboard.stegano.EncryptionProvider;
+import cr0s.nanoboard.util.ByteUtils;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -74,10 +75,10 @@ public class ImageUtils {
 
             // 4. Try to decompress bytes
             decryptedBytes = CompressionProvider.decompressBytes(decryptedBytes);
-
+            
             return decryptedBytes;
         } catch (DataFormatException | IOException ex) {
-            //Logger.getLogger(ImageUtils.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
 
         return null;
