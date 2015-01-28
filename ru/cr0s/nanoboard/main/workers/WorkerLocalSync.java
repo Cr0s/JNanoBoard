@@ -129,7 +129,8 @@ public class WorkerLocalSync extends SwingWorker<Void, SyncTaskState> {
                     currentProgress++;
                     publish (new SyncTaskState(new Rule(), "", "outbox: " + nanoPost.toString(), currentProgress));
                 } catch (MalformedNanoPostException ex) {
-                    Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    System.out.println("[Invalid nanopost in outbox]: " + f.toString());
+                    //Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }
             } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | IOException ex) {
                 Logger.getLogger(NBFrame.class.getName()).log(Level.SEVERE, null, ex);

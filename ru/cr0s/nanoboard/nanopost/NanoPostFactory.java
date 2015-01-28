@@ -52,6 +52,10 @@ public class NanoPostFactory {
 
     public static NanoPost getNanoPostFromBytes(byte[] data, boolean inbox) throws MalformedNanoPostException {
         try {
+            if (data == null) {
+                throw new MalformedNanoPostException("Not a nanopost");
+            }
+            
             // 1. Determine data size
             int dataLength = data.length;
             DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));

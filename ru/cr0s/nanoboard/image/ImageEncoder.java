@@ -23,184 +23,274 @@
  */
 package cr0s.nanoboard.image;
 
+import cr0s.nanoboard.stegano.EncryptionProvider;
+import cr0s.nanoboard.stegano.RC4;
+import cr0s.nanoboard.util.BitInputStream;
+import cr0s.nanoboard.util.BitOutputStream;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 import javax.imageio.ImageIO;
 
 /**
- * Steganography encoder by LSB method
+ * Steganography encoder by F5 LSB method
  *
  * @author Cr0s
  */
-
-/*
- * There is a sample of data encoding:
- * 
- * Image shorts stored in ARGB format, which means each pixel has stored in 4 shorts:
- * A        R        G        B
- * AAAAAAAA RRRRRRRR GGGGGGGG BBBBBBBB
- * 
- * By default we will store our message into last 3 bits of R, G and last 2 bits of B color component of pixel:
- * AAAAAAAA RRRRRMMM GGGGGMMM BBBBBBMM
- * Where M is a message bits   
- * 
- * In file we store the message length info first PIXELS_PER_LENGTH pixels
- * Then, we going for each EACH_PIXEL (4 by default) pixels and read/write message bits
- */
 public class ImageEncoder {
-    public final static int EACH_PIXEL = 4;              // Store information in each N pixels
-    public final static int MAX_MESSAGE_LENGTH = 1024;
 
     /**
-     * 
-     * @param ARGB pixel value
-     * @param b short to write (0-255)
-     * @return 
-     */
-    private static int writeByteToPixel(int ARGB, short b) {
-        int aValue = ((ARGB >> 24) & 0xff);
-        // Message bits: MMMMMMMM
-        // Colors:       RRRGGGBB
-
-        // At R color component we store at last 3 bits by default: RRRRRRRR -> RRRRRMMM
-        int rValue = (((ARGB >> 16) & 0xFF) >> 3) << 3;
-        //System.out.println("Bits: " + Integer.toBinaryString((b >> (8 - 3)) & 0xFF));
-        //System.out.println("B: " + Integer.toBinaryString(rValue));
-        rValue |= (b >> (8 - 3)) & 0xFF;
-        //System.out.println("A: " + Integer.toBinaryString(rValue));
-
-        // At G color component we store at last 3 bits by default: GGGGGGGG -> GGGGGMMM
-        int gValue = (((ARGB >> 8) & 0xFF) >> 3) << 3;
-        gValue |= ((b >> 2) & 7) & 0xFF;
-
-        // And, finally, store at last 2 bits of B color component by default: BBBBBBBB -> BBBBBBMM
-        int bValue = ((ARGB & 0xff) >> (3 - 1)) << (3 - 1);
-        bValue |= (b & 0x03) & 0xFF;
-
-        // Compact pixel back
-        ARGB = 0;             // A - transparency, R - red color, G - green color, B - blue color, M - message bits
-        ARGB |= aValue << 24; // AAAAAAAA 00000000 00000000 00000000
-        ARGB |= rValue << 16; // AAAAAAAA RRRRRMMM 00000000 00000000
-        ARGB |= gValue << 8;  // AAAAAAAA RRRRRMMM GGGGGMMM 00000000
-        ARGB |= bValue;       // AAAAAAAA RRRRRMMM GGGGGMMM BBBBBBMM   
-            
-        return ARGB;
-    }
-    
-    /**
-     * 
-     * @param ARGB pixel
-     * @return data short, extracted from pixel (0-255)
-     */
-    public static short readByteFromPixel(int ARGB) {
-        short result;
-
-        // Read 3 bits from R, 3 bits from G and 2 bits from B and pack bits into 8-bits short (short) value (-128 - 127)
-        int msgByte = (((ARGB >> 16) & 0x7) << 5);
-        msgByte |= (((ARGB >> 8) & 0x7) << 2);
-        msgByte |= ((ARGB & 0x3));
-
-        result = (short) (msgByte & 0xFF);    
-        
-        return result;
-    }
-    
-    /**
-     * Write some custom data shorts (as short 0-255) into image and saves it into file
+     * Write some custom data shorts (as short 0-255) into image and saves it
+     * into file
      *
      * Bytes sequence followed little endian
+     *
      * @param bimg opened source buffered image
      * @param msg shorts to store
      * @param filename
      */
-    public static void writeBytesToImage(BufferedImage bimg, short[] msg, String filename, Random rng) throws ImageWriteException {
+    public static void writeBytesToImage(BufferedImage bimg, byte[] msg, String filename, String key) throws ImageWriteException, IOException {
 
         int w = bimg.getWidth();
         int h = bimg.getHeight();
 
-        if (msg.length > Math.pow(2, 8 * 4)) {
-            throw new ImageWriteException("Message length exceeds possible length (" + msg.length + " > " + Math.pow(2, 8 * 4) + ")");
-        } else {
-            // Encode message length into first 4 pixels (integer has 4 shorts)
-            // We don't write message length info into A bytes
-            // Note that shorts of number following LITTLE ENDIAN order
+        //System.out.println("[Key] " + key);
+
+        RC4 prng = new RC4(EncryptionProvider.sha256(key.getBytes()));
+        Set<Integer> usedBytes = new HashSet<>();
+
+        // Encode message length
+        int length = msg.length;
+        //System.out.println("[Actual length] " + length);
+        byte[] lengthBytes = new byte[4];
+        lengthBytes[0] = (byte) ((length >> 24) & 0xFF);
+        lengthBytes[1] = (byte) ((length >> 16) & 0xFF);
+        lengthBytes[2] = (byte) ((length >> 8) & 0xFF);
+        lengthBytes[3] = (byte) (length & 0xFF);
+
+        byte[] data = new byte[1 + 4 + length];
+
+        // Add a header byte to the nanopost to be able to check validity
+        byte[] header = new byte[1];
+        header[0] = prng.getByte();
+        
+        //System.out.println("[Validation byte]: " + header[0]);
+        
+        // Write header byte
+        System.arraycopy(header, 0, data, 0, 1);
+        
+        // Write length to data array
+        System.arraycopy(lengthBytes, 0, data, 1, 4);
+
+        // Write data to data array
+        System.arraycopy(msg, 0, data, 5, msg.length);
+
+        //System.out.println("[Data array] " + Arrays.toString(data));
+
+        ByteArrayInputStream bais = new ByteArrayInputStream(data);
+        BitInputStream bis = new BitInputStream(bais);
+
+        // Write data bits as LSB for pixel bytes
+        int bitNumber = 0;
+        //System.out.println("[Index] ");
+        byte bit;
+        
+        while ((bit = (byte) bis.readBits(1)) != -1 && bitNumber < data.length * 8) {
+            // Get image pixel
+            int index = nextPixelIndex(prng, usedBytes, h, w);
+
+            int x = getPixelX(index, h, w);
+            int y = getPixelY(index, h, w);
+            int byteNumber = getPixelZ(index, h, w);
+
+            ////System.out.print(index + " x: " + x + " y: " + y + " b: " + byteNumber + "  ");            
             
-            for (int b = 0; b < 4; b++) {
-                // Get one short from length
-                short lengthByte = (short) ((msg.length >> 8 * b) & 0xFF);
-                
-                // Write short (unsigned byte) to image
-                int pixel = bimg.getRGB(b, 0);
-                pixel = writeByteToPixel(pixel, (short)lengthByte);
-                bimg.setRGB(b, 0, pixel);
-            }
-
-            for (int i = 1, msgPos = 0, row = 0, j = 0; row < h; row++) {
-                for (int col = 4; col < w && j < msg.length; col++, i++) {
-                    if (rng.nextBoolean()) {
-                        int ARGB = bimg.getRGB(col, row);
-                        ARGB = writeByteToPixel(ARGB, msg[msgPos]);
-
-                        bimg.setRGB(col, row, ARGB);
-
-                        msgPos++;
-                        j++;
-                    }
-                }
-            }
-
+            int pixel = 0;
             try {
-                File outputfile = new File(filename);
-                ImageIO.write(bimg, "png", outputfile);
-            } catch (IOException e) { 
-                throw new ImageWriteException("Error writing to file: " + e.getMessage());
+                pixel = bimg.getRGB(x, y);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                System.err.println("x: " + x + " y: " + y + " z: " + byteNumber);
             }
+
+            // Write LSB to pixel
+            if (bit != 0) {
+                pixel |= 1 << byteNumber * 8;
+            } else {
+                pixel &= ~(1 << byteNumber * 8);
+            }
+            
+            
+            //System.out.println("lsb: " + bit + " = " + ((pixel >> (8 * byteNumber)) & 0x01));            
+            
+            bimg.setRGB(x, y, pixel);
+
+            bitNumber++;
+        }
+
+        try {
+            File outputfile = new File(filename);
+            ImageIO.write(bimg, "png", outputfile);
+        } catch (IOException e) {
+            throw new ImageWriteException("Error writing to file: " + e.getMessage());
         }
     }
 
-    /**
-     * Get message length info from PNG file
-     * 
-     * Reading first PIXELS_PER_LENGTH pixels
-     * Length shorts following LITTLE_ENDIAN order
-     * @param bimg
-     * @return 
-     */
-    private static int decodeMessageLength(BufferedImage bimg) {
-        int result = 0;      
-        for (int b = 0; b < 4; b++) {
-            int pixel = bimg.getRGB(4 - b - 1, 0);
-            
-            int lengthByte = readByteFromPixel(pixel);
-            
-            // Compacting shorts into numeric value, starting from lower shorts
-            result = (result << 8) + lengthByte;
-        }
-        
-        return result;
+    private static int getPixelX(int index, int h, int w) {
+        return index / (h * 3) % w;
+    }
+
+    private static int getPixelY(int index, int h, int w) {
+        return index / 3 % h;
     }
     
-    public static short[] readBytesFromImage(BufferedImage bimg, Random rng) {
-        int w = bimg.getWidth(), h = bimg.getHeight();
+    private static int getPixelZ(int index, int h, int w) {
+        return index % 3;
+    }    
+    
+    public static int nextPixelIndex(RC4 prng, Set<Integer> usedBytes, int h, int w) {
+        int index = 0;
+        int max = h * w * 3;
+        do {
+            index = (int) prng.getUnsignedInt() % max;
+        } while (!usedBytes.add(index));
 
-        int msglength = decodeMessageLength(bimg);
-        
-        short[] result = new short[msglength];
-        
-        for (int row = 0, j = 0; row < h; row++) {
-            for (int col = 4; col < w && j < msglength; col++) {
+        return index;
+    }
 
-                if (rng.nextBoolean()) {
-                    int pixelByte = bimg.getRGB(col, row);
-                    
-                    result[j] = (short)readByteFromPixel(pixelByte);
-                    j++;
-                }
-            }   
+    public static int readMessageLength(RC4 prng, Set<Integer> usedPixels, BufferedImage bimg, String key) {
+        int w = bimg.getWidth();
+        int h = bimg.getHeight();
+
+        // Get first 4 bytes to decode message length
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        BitOutputStream bos = new BitOutputStream(baos);
+        
+        //System.out.println("[Index]: ");
+        for (int i = 0; i < 8 * 4; i++) {
+            int index = nextPixelIndex(prng, usedPixels, h, w);
+
+            ////System.out.print(index + ", ");
+
+            int x = getPixelX(index, h, w);
+            int y = getPixelY(index, h, w);
+            int byteNumber = getPixelZ(index, h, w);
+
+            int pixel = bimg.getRGB(x, y);
+
+            int lsb = (pixel >> (8 * byteNumber)) & 0x01;
+            //System.out.println("lsb: " + lsb);
+            bos.writeBits(1, lsb);
+        }
+        bos.flush();
+
+        byte[] lengthBytes = baos.toByteArray();
+
+        
+        // Pack length bytes to 32 bit int
+        int length = ((0xFF & lengthBytes[0]) << 24) | ((0xFF & lengthBytes[1]) << 16) | ((0xFF & lengthBytes[2]) << 8) | (0xFF & lengthBytes[3]);
+        return length;
+    }
+
+    private static boolean validateHeaderByte(BufferedImage bimg, RC4 prng, Set<Integer> usedBytes, String key) {
+        int w = bimg.getWidth();
+        int h = bimg.getHeight();
+        
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        BitOutputStream bos = new BitOutputStream(baos);
+        
+        byte expected = prng.getByte();
+        
+        // Read 8 bits from image
+        for (int i = 0; i < 8; i++) {
+            int index = nextPixelIndex(prng, usedBytes, h, w);
+
+            ////System.out.print(index + ", ");
+
+            int x = getPixelX(index, h, w);
+            int y = getPixelY(index, h, w);
+            int byteNumber = getPixelZ(index, h, w);
+
+            int pixel = bimg.getRGB(x, y);
+
+            int lsb = (pixel >> (8 * byteNumber)) & 0x01;
+
+            //System.out.println("lsb: " + lsb);
+            
+            bos.writeBits(1, lsb);
+        }
+
+        bos.flush();            
+        
+        byte got = baos.toByteArray()[0];
+        
+        //System.out.println("[Validation byte]: " + got + " = " + expected);
+        
+        return got == expected;
+    }
+    
+    public static short[] readBytesFromImage(BufferedImage bimg, String key) {
+        //System.out.println("[Key] " + key);
+
+        int w = bimg.getWidth();
+        int h = bimg.getHeight();
+
+        RC4 prng = new RC4(EncryptionProvider.sha256(key.getBytes()));
+        Set<Integer> usedPixels = new HashSet<>();
+
+        // Invalid header
+        if (!validateHeaderByte(bimg, prng, usedPixels, key)) {
+            return null;
         }
         
-        return result; 
+        int length = readMessageLength(prng, usedPixels, bimg, key);
+
+        //System.out.println("[Length] " + length);
+        if (length <= 0) {
+            return null;
+        }
+
+        // Get first 4 bytes to decode message length
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        BitOutputStream bos = new BitOutputStream(baos);
+
+        // Read data bits, skip first validation byte, skip first 4 bytes (message length)
+        for (int i = 8 * (4 + 1) - 1; i < 8 * length + 32 + 7; i++) {
+            int index = nextPixelIndex(prng, usedPixels, h, w);
+
+            ////System.out.print(index + ", ");
+
+            int x = getPixelX(index, h, w);
+            int y = getPixelY(index, h, w);
+            int byteNumber = getPixelZ(index, h, w);
+
+            int pixel = bimg.getRGB(x, y);
+
+            int lsb = (pixel >> (8 * byteNumber)) & 0x01;
+
+            //System.out.println("lsb: " + lsb);
+            
+            bos.writeBits(1, lsb);
+        }
+
+        bos.flush();
+
+        
+        byte[] data = baos.toByteArray();
+        short[] d = new short[data.length];
+        for (int i = 0; i < data.length; i++) {
+            d[i] = (short) (data[i] & 0xFF);
+        }
+        
+        
+        //System.out.println("[Data array] " + Arrays.toString(data));
+
+        return d;
     }
 }

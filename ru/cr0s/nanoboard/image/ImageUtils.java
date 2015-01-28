@@ -57,8 +57,12 @@ public class ImageUtils {
             BufferedImage img = ImageIO.read(new ByteArrayInputStream(bytes));
 
             // 2. Try to read stegano data
-            short[] s = ImageEncoder.readBytesFromImage(img, new Random(key.hashCode()));
+            short[] s = ImageEncoder.readBytesFromImage(img, key);
 
+            if (s == null) {
+                return null;
+            }
+            
             // Data inside image is too small, reject image
             if (s.length < EncryptionProvider.SHA_256_HASH_SIZE_BYTES * 2) {
                 return null;
@@ -106,7 +110,7 @@ public class ImageUtils {
                 srcS[i] = (short) (encryptedBytes[i] & 0xFF);
             }
 
-            ImageEncoder.writeBytesToImage(in, srcS, outputFile.toString(), new Random(key.hashCode()));
+            ImageEncoder.writeBytesToImage(in, encryptedBytes, outputFile.toString(), key);
 
             System.out.println("[OK] Steganographic .png \"" + outputFile.toString() + "\" generated.");
         } catch (DataFormatException ex) {
@@ -130,18 +134,6 @@ public class ImageUtils {
         int h = bi.getHeight();
         int w = bi.getWidth();
 
-        int result = 0;
-
-        Random r = new Random(key.hashCode());
-
-        for (int row = 0; row < h; row++) {
-            for (int col = 4; col < w; col++) {
-                if (r.nextBoolean()) {
-                    result++;
-                }
-            }
-        }
-
-        return result;        
+        return w * h / 8;      
     }
 }
