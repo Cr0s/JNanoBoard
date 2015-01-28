@@ -134,6 +134,8 @@ public class ImageUtils {
         int h = bi.getHeight();
         int w = bi.getWidth();
 
-        return w * h / 8;      
+        // In each pixel we have 3 bytes (R, G and B) in which we can store one bit of useful data at LSB
+        // So we can store w * h * 3 / 8 bytes.
+        return (w * h * 3) / 8;      
     }
 }
