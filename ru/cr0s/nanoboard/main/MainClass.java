@@ -38,7 +38,7 @@ import java.util.logging.Logger;
  * @author Cr0s
  */
 public class MainClass {
-    public static final String VERSION = "2.0a";
+    public static final String VERSION = "3.0a";
     public static final String RULES_DIR = System.getProperty("user.dir") + System.getProperty("file.separator") + "rules";
     public static final String NANOPOSTS_DIR = System.getProperty("user.dir") + System.getProperty("file.separator") + "nanoposts";
     
@@ -77,20 +77,19 @@ public class MainClass {
     
     private static void setLookAndFeel() {
         try {
+            OUTER:
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Windows".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
+                //System.out.println(info.getName());
+                switch (info.getName()) {
+                    case "Windows":
+                        javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                        break OUTER;
+                    case "GTK+":
+                        javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                        break OUTER;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(NBFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(NBFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(NBFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(NBFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }        
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
+        }         
     }
 }
